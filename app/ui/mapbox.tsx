@@ -250,7 +250,7 @@ export default function Map() {
             4,
             '#16a34a',
           ],
-          'circle-radius': ['interpolate', ['linear'], ['get', 'ratingCount'], 1, 6, 20, 13],
+          'circle-radius': ['interpolate', ['linear'], ['get', 'ratingCount'], 1, 8, 20, 16],
           'circle-stroke-width': 2,
           'circle-stroke-color': '#ffffff',
         },
