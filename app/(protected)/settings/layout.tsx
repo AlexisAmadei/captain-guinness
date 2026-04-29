@@ -13,15 +13,16 @@ export default function SettingsLayout({ children, title }: SettingsLayoutProps)
   const router = useRouter();
 
   return (
-    <Box minH="100dvh" bg="gray.50">
+    <Box minH="100dvh" bg="app.canvas">
       {/* Settings Header */}
       {title && (
         <Box
           position="sticky"
           top={0}
-          bg="white"
+          bg="app.surface"
+          backdropFilter="blur(20px)"
           borderBottomWidth={1}
-          borderColor="gray.200"
+          borderColor="app.border"
           zIndex={10}
         >
           <HStack h="14" px={4} gap={3}>
@@ -31,7 +32,7 @@ export default function SettingsLayout({ children, title }: SettingsLayoutProps)
               onClick={() => router.back()}
               p={0}
             >
-              <Icon fontSize="xl" color="gray.700">
+              <Icon fontSize="xl" color="app.fg">
                 <BiChevronLeft />
               </Icon>
             </Button>

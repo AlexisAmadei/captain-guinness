@@ -13,7 +13,7 @@ import {
 import { FOCUS_MAP_POINT_EVENT, type FocusMapPointDetail } from "@/lib/map/events";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { LuArrowUpRight, LuChevronDown, LuPlus, LuSparkles, LuStar } from "react-icons/lu";
+import { LuChevronDown, LuPlus, LuStar, LuX } from "react-icons/lu";
 
 type ReviewPoint = {
   id: string;
@@ -31,11 +31,22 @@ type ReviewsMapResponse = {
   error?: string;
 };
 
-function formatAverageRating(value: number) {
-  return new Intl.NumberFormat(undefined, {
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 2,
-  }).format(value);
+function ratingColor(value: number): string {
+  if (value >= 4) return "green.500";
+  if (value >= 3) return "yellow.500";
+  if (value >= 2) return "orange.400";
+  return "red.500";
+}
+
+function ratingBg(value: number): string {
+  if (value >= 4) return "green.50";
+  if (value >= 3) return "yellow.50";
+  if (value >= 2) return "orange.50";
+  return "red.50";
+}
+
+function formatRating(value: number) {
+  return value.toFixed(1);
 }
 
 function formatCount(count: number) {
@@ -43,15 +54,34 @@ function formatCount(count: number) {
 }
 
 function formatLastRatedAt(value: string | null) {
-  if (!value) return "Dernière note inconnue";
-
+  if (!value) return null;
   const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return "Dernière note inconnue";
+  if (Number.isNaN(parsed.getTime())) return null;
+  return new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "short" }).format(parsed);
+}
 
-  return new Intl.DateTimeFormat("fr-FR", {
-    day: "2-digit",
-    month: "short",
-  }).format(parsed);
+function StarRow({ value }: { value: number }) {
+  const full = Math.floor(value);
+  const half = value - full >= 0.25 && value - full < 0.75;
+  return (
+    <HStack gap="0.5" display="inline-flex">
+      {Array.from({ length: 5 }, (_, i) => {
+        const pos = i + 1;
+        const filled = pos <= full || (pos === full + 1 && half);
+        return (
+          <Box
+            key={i}
+            as="span"
+            color={filled ? "yellow.400" : "gray.200"}
+            fontSize="11px"
+            lineHeight="1"
+          >
+            ★
+          </Box>
+        );
+      })}
+    </HStack>
+  );
 }
 
 export function ReviewPill() {
@@ -84,42 +114,36 @@ export function ReviewPill() {
           throw new Error(payload.error || "Impossible de charger les avis");
         }
 
-        const nextReviews = (payload.points ?? []).slice().sort((left, right) => {
-          if (right.averageRating !== left.averageRating) {
-            return right.averageRating - left.averageRating;
-          }
-
-          if (right.ratingCount !== left.ratingCount) {
-            return right.ratingCount - left.ratingCount;
-          }
-
-          return left.name.localeCompare(right.name);
+        const nextReviews = (payload.points ?? []).slice().sort((a, b) => {
+          if (b.averageRating !== a.averageRating) return b.averageRating - a.averageRating;
+          if (b.ratingCount !== a.ratingCount) return b.ratingCount - a.ratingCount;
+          return a.name.localeCompare(b.name);
         });
 
         setReviews(nextReviews);
       } catch (loadError) {
-        if (controller.signal.aborted) {
-          return;
-        }
-
+        if (controller.signal.aborted) return;
         setError(loadError instanceof Error ? loadError.message : "Erreur inconnue");
         setReviews([]);
       } finally {
-        if (!controller.signal.aborted) {
-          setLoading(false);
-        }
+        if (!controller.signal.aborted) setLoading(false);
       }
     }
 
     loadReviews();
-
     return () => controller.abort();
   }, []);
 
   const totalRatings = useMemo(
-    () => reviews.reduce((sum, review) => sum + review.ratingCount, 0),
+    () => reviews.reduce((sum, r) => sum + r.ratingCount, 0),
     [reviews],
   );
+
+  const overallAverage = useMemo(() => {
+    if (reviews.length === 0) return null;
+    const weighted = reviews.reduce((sum, r) => sum + r.averageRating * r.ratingCount, 0);
+    return weighted / totalRatings;
+  }, [reviews, totalRatings]);
 
   const focusPointOnMap = (review: ReviewPoint) => {
     const detail: FocusMapPointDetail = {
@@ -130,213 +154,236 @@ export function ReviewPill() {
       averageRating: review.averageRating,
       ratingCount: review.ratingCount,
     };
-
     window.dispatchEvent(new CustomEvent(FOCUS_MAP_POINT_EVENT, { detail }));
   };
 
-  const topReview = reviews[0];
-
+  // ── Collapsed state ──────────────────────────────────────────────────────────
   if (!isOpen) {
     return (
-      <>
+      <HStack
+        position="fixed"
+        bottom={{ base: 4, md: 5 }}
+        left={{ base: 3, md: 5 }}
+        zIndex={30}
+        gap={2}
+        transform={entered ? "translateY(0)" : "translateY(24px)"}
+        opacity={entered ? 1 : 0}
+        transition="transform 400ms cubic-bezier(0.16,1,0.3,1), opacity 260ms ease"
+      >
+        {/* Add rating */}
         <Button
-          position="fixed"
-          left={{ base: 3, md: 5 }}
-          bottom={{ base: 16, md: 17 }}
-          zIndex={30}
           borderRadius="full"
-          boxSize="12"
+          boxSize="11"
           p="0"
-          colorPalette="blue"
-          boxShadow="0 18px 40px rgba(15, 23, 42, 0.18)"
+          colorPalette="brand"
+          boxShadow="0 4px 20px rgba(15,23,42,0.20)"
           aria-label="Ajouter un avis"
           onClick={() => router.push("/rate")}
         >
           <LuPlus size={18} />
         </Button>
 
+        {/* Avis pill */}
         <Button
-          position="fixed"
-          left={{ base: 3, md: 5 }}
-          bottom={{ base: 4, md: 5 }}
-          zIndex={30}
           borderRadius="full"
           px="4"
-          py="3"
-          h="auto"
-          colorPalette="blue"
-          boxShadow="0 18px 40px rgba(15, 23, 42, 0.18)"
+          h="11"
+          colorPalette="brand"
+          variant="solid"
+          boxShadow="0 4px 20px rgba(15,23,42,0.20)"
           onClick={() => setIsOpen(true)}
+          gap={2}
         >
-          <LuSparkles size={16} />
-          <Text fontWeight="semibold">Avis</Text>
-          <Badge variant="solid" colorPalette="blue" borderRadius="full" px="2">
-            {reviews.length || "-"}
-          </Badge>
+          <LuStar size={14} />
+          <Text fontWeight="semibold" fontSize="sm">Avis</Text>
+          {!loading && (
+            <Badge
+              variant="solid"
+              bg="rgba(255,255,255,0.22)"
+              color="white"
+              borderRadius="full"
+              px="2"
+              fontSize="xs"
+              fontWeight="semibold"
+            >
+              {reviews.length}
+            </Badge>
+          )}
+          {overallAverage !== null && (
+            <HStack gap="1" borderLeftWidth="1px" borderColor="rgba(255,255,255,0.3)" pl="2">
+              <Text fontSize="sm" fontWeight="bold">{formatRating(overallAverage)}</Text>
+              <Text fontSize="xs" opacity={0.75}>/ 5</Text>
+            </HStack>
+          )}
         </Button>
-      </>
+      </HStack>
     );
   }
 
+  // ── Expanded state ───────────────────────────────────────────────────────────
   return (
     <Card.Root
       position="fixed"
       left={{ base: 3, md: 5 }}
       bottom={{ base: 4, md: 5 }}
       zIndex={30}
-      w={{ base: "calc(100vw - 1.5rem)", sm: "20rem", md: "22rem" }}
-      maxH="min(58vh, 32rem)"
-      variant="elevated"
+      w={{ base: "calc(100vw - 1.5rem)", sm: "21rem", md: "23rem" }}
+      maxH="min(60vh, 34rem)"
       bg="bg"
       borderWidth="1px"
       borderColor="border"
       borderRadius="2xl"
       overflow="hidden"
-      boxShadow="0 20px 60px rgba(15, 23, 42, 0.22)"
-      backdropFilter="blur(18px)"
+      boxShadow="0 20px 60px rgba(15,23,42,0.22)"
+      backdropFilter="blur(20px)"
       transform={entered ? "translateY(0)" : "translateY(36px)"}
       opacity={entered ? 1 : 0}
-      transition="transform 480ms cubic-bezier(0.16, 1, 0.3, 1), opacity 260ms ease"
-      willChange="transform, opacity"
+      transition="transform 480ms cubic-bezier(0.16,1,0.3,1), opacity 260ms ease"
       pointerEvents="auto"
       role="region"
-      aria-label="Reviews classées par note moyenne"
+      aria-label="Avis classés par note moyenne"
     >
-      <Box h="1.5" bgGradient="linear(to-r, blue.400, cyan.300, emerald.300)" />
-      <Card.Body gap="4" p="4" display="flex" flexDirection="column" minH={0}>
-        <Stack gap="1">
-          <HStack justify="space-between" align="start" gap="3">
-            <HStack gap="2.5" minW={0}>
-              <Box
-                display="inline-flex"
-                alignItems="center"
-                justifyContent="center"
-                boxSize="9"
-                borderRadius="full"
-                bg="blue.50"
-                color="blue.600"
-              >
-                <LuStar size={15} />
-              </Box>
-              <Stack gap="0" minW={0}>
-                <Text fontWeight="semibold" lineHeight="1.1">
-                  Avis les mieux notés
-                </Text>
-                <Text fontSize="sm" color="fg.muted">
-                  {reviews.length} lieux • {totalRatings} notes
-                </Text>
-              </Stack>
+      {/* Gradient accent */}
+      <Box h="1" bgGradient="to-r" gradientFrom="brand.600" gradientTo="brand.400" />
+
+      <Card.Body p="0" display="flex" flexDirection="column" minH={0}>
+        {/* Header */}
+        <HStack px="4" pt="4" pb="3" justify="space-between" flexShrink={0} borderBottomWidth="1px" borderColor="border">
+          <Stack gap="0" minW={0}>
+            <HStack gap="1.5">
+              <LuStar size={13} color="var(--chakra-colors-yellow-400)" />
+              <Text fontWeight="semibold" fontSize="sm">
+                Meilleurs bars
+              </Text>
             </HStack>
-
-            <HStack gap="2">
-              {topReview && (
-                <Badge colorPalette="blue" variant="subtle" borderRadius="full" px="2">
-                  {formatAverageRating(topReview.averageRating)} / 5
-                </Badge>
-              )}
-              <Button
-                size="xs"
-                variant="ghost"
-                colorPalette="gray"
-                onClick={() => setIsOpen(false)}
-                aria-label="Masquer les avis"
-              >
-                <LuChevronDown size={14} />
-              </Button>
-            </HStack>
-          </HStack>
-
-          <Text fontSize="sm" color="fg.muted">
-            Liste triée par moyenne décroissante.
-          </Text>
-        </Stack>
-
-        {loading ? (
-          <Stack gap="3">
-            <Skeleton h="12" borderRadius="xl" />
-            <Skeleton h="12" borderRadius="xl" />
-            <Skeleton h="12" borderRadius="xl" />
-          </Stack>
-        ) : error ? (
-          <Box borderRadius="xl" bg="red.50" px="3" py="2.5">
-            <Text fontSize="sm" color="red.700">
-              {error}
+            <Text fontSize="xs" color="fg.muted">
+              {reviews.length} lieux · {totalRatings} notes
+              {overallAverage !== null && ` · moy. ${formatRating(overallAverage)}`}
             </Text>
-          </Box>
-        ) : (
-          <Stack gap="2" flex="1" minH={0} overflowY="auto" pr="1">
-            {reviews.map((review, index) => (
-              <HStack
-                key={review.id}
-                as="button"
-                align="center"
-                justify="space-between"
-                gap="3"
-                px="3"
-                py="2.5"
-                borderRadius="xl"
-                bg={index === 0 ? "blue.50" : "bg.subtle"}
-                cursor="pointer"
-                textAlign="left"
-                transition="background-color 120ms ease"
-                _hover={{ bg: index === 0 ? "blue.100" : "bg.muted" }}
-                _focusVisible={{ outline: "2px solid", outlineColor: "blue.500", outlineOffset: "2px" }}
-                onClick={() => focusPointOnMap(review)}
-                aria-label={`Centrer la carte sur ${review.name}`}
-              >
-                <HStack gap="3" minW={0} flex="1">
-                  <Box
+          </Stack>
+          <Button
+            size="xs"
+            variant="ghost"
+            colorPalette="gray"
+            borderRadius="full"
+            boxSize="7"
+            p="0"
+            onClick={() => setIsOpen(false)}
+            aria-label="Masquer"
+          >
+            <LuX size={13} />
+          </Button>
+        </HStack>
+
+        {/* List */}
+        <Stack gap="0" flex="1" minH={0} overflowY="auto">
+          {loading ? (
+            <Stack gap="0" p="3">
+              {[0, 1, 2].map((i) => (
+                <Skeleton key={i} h="14" borderRadius="xl" mb="2" />
+              ))}
+            </Stack>
+          ) : error ? (
+            <Box px="4" py="3">
+              <Text fontSize="sm" color="red.500">{error}</Text>
+            </Box>
+          ) : reviews.length === 0 ? (
+            <Box px="4" py="6" textAlign="center">
+              <Text fontSize="sm" color="fg.muted">Aucun avis pour le moment.</Text>
+            </Box>
+          ) : (
+            reviews.map((review, index) => {
+              const date = formatLastRatedAt(review.lastRatedAt);
+              return (
+                <HStack
+                  key={review.id}
+                  as="button"
+                  align="center"
+                  gap="3"
+                  px="4"
+                  py="2.5"
+                  cursor="pointer"
+                  textAlign="left"
+                  borderBottomWidth={index < reviews.length - 1 ? "1px" : "0"}
+                  borderColor="border"
+                  transition="background 100ms ease"
+                  _hover={{ bg: "bg.subtle" }}
+                  _focusVisible={{ outline: "2px solid", outlineColor: "brand.500", outlineOffset: "-2px" }}
+                  onClick={() => { focusPointOnMap(review); setIsOpen(false); }}
+                  aria-label={`Voir ${review.name} sur la carte`}
+                >
+                  {/* Rank */}
+                  <Text
                     flexShrink={0}
-                    boxSize="8"
-                    borderRadius="full"
-                    bg={index === 0 ? "blue.600" : "gray.200"}
-                    color={index === 0 ? "white" : "fg"}
-                    display="inline-flex"
-                    alignItems="center"
-                    justifyContent="center"
-                    fontSize="sm"
+                    w="5"
+                    fontSize="xs"
                     fontWeight="semibold"
+                    color={index === 0 ? "app.accent" : "fg.muted"}
+                    textAlign="center"
                   >
                     {index + 1}
-                  </Box>
+                  </Text>
 
-                  <Stack gap="0" minW={0} flex="1">
-                    <Text fontWeight="medium" whiteSpace="nowrap" overflow="hidden" textOverflow="ellipsis">
+                  {/* Info */}
+                  <Stack gap="0.5" minW={0} flex="1">
+                    <Text
+                      fontWeight="medium"
+                      fontSize="sm"
+                      whiteSpace="nowrap"
+                      overflow="hidden"
+                      textOverflow="ellipsis"
+                    >
                       {review.name}
                     </Text>
-                    <Text fontSize="xs" color="fg.muted">
-                      {formatCount(review.ratingCount)} • {formatLastRatedAt(review.lastRatedAt)}
-                    </Text>
+                    <HStack gap="1.5">
+                      <StarRow value={review.averageRating} />
+                      <Text fontSize="xs" color="fg.muted">
+                        {formatCount(review.ratingCount)}
+                        {date ? ` · ${date}` : ""}
+                      </Text>
+                    </HStack>
                   </Stack>
+
+                  {/* Score badge */}
+                  <Badge
+                    flexShrink={0}
+                    borderRadius="lg"
+                    px="2"
+                    py="1"
+                    bg={ratingBg(review.averageRating)}
+                    color={ratingColor(review.averageRating)}
+                    fontSize="sm"
+                    fontWeight="bold"
+                  >
+                    {formatRating(review.averageRating)}
+                  </Badge>
                 </HStack>
+              );
+            })
+          )}
+        </Stack>
 
-                <Stack gap="0" align="end" flexShrink={0}>
-                  <Text fontSize="sm" fontWeight="semibold" lineHeight="1">
-                    {formatAverageRating(review.averageRating)}
-                  </Text>
-                  <Text fontSize="xs" color="fg.muted">
-                    moyenne
-                  </Text>
-                </Stack>
-              </HStack>
-            ))}
-
-            {reviews.length === 0 && (
-              <Box borderRadius="xl" bg="bg.subtle" px="3" py="4" textAlign="center">
-                <Text fontSize="sm" color="fg.muted">
-                  Aucun avis disponible pour le moment.
-                </Text>
-              </Box>
-            )}
-          </Stack>
-        )}
-
-        <HStack justify="space-between" pt="1" fontSize="xs" color="fg.muted">
-          <Text>Tri dynamique par note moyenne</Text>
-          <HStack gap="1">
-            <LuArrowUpRight size={12} />
-            <Text>Live</Text>
-          </HStack>
+        {/* Footer */}
+        <HStack
+          px="4"
+          py="2.5"
+          borderTopWidth="1px"
+          borderColor="border"
+          justify="space-between"
+          flexShrink={0}
+        >
+          <Text fontSize="xs" color="fg.muted">Trié par note moyenne</Text>
+          <Button
+            size="xs"
+            variant="ghost"
+            colorPalette="brand"
+            borderRadius="full"
+            gap="1"
+            onClick={() => router.push("/rate")}
+          >
+            <LuPlus size={11} />
+            <Text fontSize="xs">Ajouter</Text>
+          </Button>
         </HStack>
       </Card.Body>
     </Card.Root>

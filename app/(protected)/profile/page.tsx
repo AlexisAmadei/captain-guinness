@@ -57,7 +57,7 @@ export default async function ProfilePage() {
               w="20"
               h="20"
               borderRadius="full"
-              bg="blue.100"
+              bg="brand.100"
               display="flex"
               alignItems="center"
               justifyContent="center"
@@ -70,7 +70,7 @@ export default async function ProfilePage() {
             <Heading as="h1" size="md">
               {displayName}
             </Heading>
-            <Text color="gray.500" fontSize="sm">
+            <Text color="app.muted" fontSize="sm">
               {user.email}
             </Text>
           </VStack>
@@ -80,34 +80,34 @@ export default async function ProfilePage() {
           direction="row"
           justify="space-around"
           p={4}
-          bg="white"
+          bg="app.surfaceSolid"
           borderRadius="lg"
           borderWidth={1}
-          borderColor="gray.200"
+          borderColor="app.border"
         >
           <VStack align="center" gap={1}>
-            <Heading as="h3" size="sm" color="blue.600">
+            <Heading as="h3" size="sm" color="app.accent">
               {stats.total_ratings}
             </Heading>
-            <Text fontSize="xs" color="gray.600">
+            <Text fontSize="xs" color="app.muted">
               Ratings
             </Text>
           </VStack>
-          <Box w="1px" bg="gray.200" />
+          <Box w="1px" bg="app.border" />
           <VStack align="center" gap={1}>
-            <Heading as="h3" size="sm" color="blue.600">
+            <Heading as="h3" size="sm" color="app.accent">
               {stats.average_rating ? Number(stats.average_rating).toFixed(1) : "-"}
             </Heading>
-            <Text fontSize="xs" color="gray.600">
+            <Text fontSize="xs" color="app.muted">
               Note moyenne
             </Text>
           </VStack>
-          <Box w="1px" bg="gray.200" />
+          <Box w="1px" bg="app.border" />
           <VStack align="center" gap={1}>
-            <Heading as="h3" size="sm" color="blue.600">
+            <Heading as="h3" size="sm" color="app.accent">
               {stats.ratings_last_30_days}
             </Heading>
-            <Text fontSize="xs" color="gray.600">
+            <Text fontSize="xs" color="app.muted">
               30 derniers jours
             </Text>
           </VStack>

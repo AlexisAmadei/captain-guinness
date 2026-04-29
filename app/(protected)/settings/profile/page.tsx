@@ -54,7 +54,7 @@ export default function ProfileSettingsPage() {
             w="20"
             h="20"
             borderRadius="full"
-            bg="blue.100"
+            bg="brand.100"
             display="flex"
             alignItems="center"
             justifyContent="center"
@@ -66,7 +66,7 @@ export default function ProfileSettingsPage() {
             <Heading as="h1" size="md">
               {loading ? "Loading..." : profile?.fullName || "User"}
             </Heading>
-            <Text color="gray.500" fontSize="sm">
+            <Text color="app.muted" fontSize="sm">
               @captain_user
             </Text>
           </VStack>
@@ -77,34 +77,34 @@ export default function ProfileSettingsPage() {
           direction="row"
           justify="space-around"
           p={4}
-          bg="white"
+          bg="app.surfaceSolid"
           borderRadius="lg"
           borderWidth={1}
-          borderColor="gray.200"
+          borderColor="app.border"
         >
           <VStack align="center" gap={1}>
-            <Heading as="h3" size="sm" color="blue.600">
+            <Heading as="h3" size="sm" color="app.accent">
               0
             </Heading>
-            <Text fontSize="xs" color="gray.600">
+            <Text fontSize="xs" color="app.muted">
               Ratings
             </Text>
           </VStack>
-          <Box w="1px" bg="gray.200" />
+          <Box w="1px" bg="app.border" />
           <VStack align="center" gap={1}>
-            <Heading as="h3" size="sm" color="blue.600">
+            <Heading as="h3" size="sm" color="app.accent">
               0
             </Heading>
-            <Text fontSize="xs" color="gray.600">
+            <Text fontSize="xs" color="app.muted">
               Followers
             </Text>
           </VStack>
-          <Box w="1px" bg="gray.200" />
+          <Box w="1px" bg="app.border" />
           <VStack align="center" gap={1}>
-            <Heading as="h3" size="sm" color="blue.600">
+            <Heading as="h3" size="sm" color="app.accent">
               0
             </Heading>
-            <Text fontSize="xs" color="gray.600">
+            <Text fontSize="xs" color="app.muted">
               Following
             </Text>
           </VStack>
@@ -118,11 +118,11 @@ export default function ProfileSettingsPage() {
           <Box
             w="100%"
             p={4}
-            bg="white"
+            bg="app.surfaceSolid"
             borderRadius="lg"
             borderWidth={1}
-            borderColor="gray.200"
-            color="gray.500"
+            borderColor="app.border"
+            color="app.muted"
             textAlign="center"
           >
             <Text fontSize="sm">No bio yet.</Text>
@@ -137,11 +137,11 @@ export default function ProfileSettingsPage() {
           <Box
             w="100%"
             p={4}
-            bg="white"
+            bg="app.surfaceSolid"
             borderRadius="lg"
             borderWidth={1}
-            borderColor="gray.200"
-            color="gray.500"
+            borderColor="app.border"
+            color="app.muted"
             textAlign="center"
           >
             <Text fontSize="sm">No ratings yet.</Text>
@@ -149,7 +149,7 @@ export default function ProfileSettingsPage() {
         </VStack>
 
         {/* Edit Profile Button */}
-        <Button colorScheme="blue" size="lg">
+        <Button colorPalette="brand" size="lg">
           Edit Profile
         </Button>
       </Stack>

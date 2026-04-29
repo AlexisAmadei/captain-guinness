@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { FOCUS_MAP_POINT_EVENT, type FocusMapPointDetail } from '@/lib/map/events';
@@ -42,10 +42,153 @@ function toGeoJson(points: MapPoint[]): GeoJSON.FeatureCollection<GeoJSON.Point>
   }
 }
 
+function ratingColor(rating: number): string {
+  if (rating >= 4) return '#16a34a'
+  if (rating >= 3) return '#ca8a04'
+  if (rating >= 2) return '#f97316'
+  return '#dc2626'
+}
+
+function StarDisplay({ value }: { value: number }) {
+  const full = Math.floor(value)
+  const half = value - full >= 0.25 && value - full < 0.75
+  const stars = []
+  for (let i = 1; i <= 5; i++) {
+    if (i <= full) {
+      stars.push(<span key={i} style={{ color: '#f59e0b' }}>★</span>)
+    } else if (i === full + 1 && half) {
+      stars.push(<span key={i} style={{ color: '#f59e0b' }}>½</span>)
+    } else {
+      stars.push(<span key={i} style={{ color: '#d1d5db' }}>★</span>)
+    }
+  }
+  return <span style={{ fontSize: 16, letterSpacing: 1 }}>{stars}</span>
+}
+
+type BarCardProps = {
+  point: FocusMapPointDetail
+  onClose: () => void
+}
+
+function BarCard({ point, onClose }: BarCardProps) {
+  const color = ratingColor(point.averageRating)
+
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        bottom: 'calc(4rem + env(safe-area-inset-bottom) + 0.75rem)',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 20,
+        width: 'min(22rem, calc(100vw - 2rem))',
+        background: 'rgba(253,248,240,0.97)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderRadius: 18,
+        boxShadow: '0 8px 40px rgba(61,36,9,0.18), 0 1px 4px rgba(61,36,9,0.10)',
+        overflow: 'hidden',
+        animation: 'barCardIn 220ms cubic-bezier(0.16, 1, 0.3, 1)',
+      }}
+    >
+      {/* Colour accent bar keyed to rating */}
+      <div style={{ height: 4, background: color }} />
+
+      <div style={{ padding: '16px 18px 18px' }}>
+        {/* Header row */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 14 }}>
+          <div style={{ minWidth: 0 }}>
+            <p style={{
+              margin: 0,
+              fontWeight: 700,
+              fontSize: 16,
+              color: '#231608',
+              lineHeight: 1.3,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              maxWidth: '16rem',
+            }}>
+              {point.name}
+            </p>
+            <p style={{ margin: '2px 0 0', fontSize: 12, color: '#7a6248' }}>
+              {point.ratingCount === 1 ? '1 rating' : `${point.ratingCount} ratings`}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            style={{
+              flexShrink: 0,
+              background: '#ede5d8',
+              border: 'none',
+              borderRadius: '50%',
+              width: 28,
+              height: 28,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 14,
+              color: '#7a6248',
+              marginTop: 2,
+            }}
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Score block */}
+        <div style={{
+          background: '#f0e8da',
+          borderRadius: 12,
+          padding: '12px 14px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 14,
+        }}>
+          {/* Big number */}
+          <div style={{
+            flexShrink: 0,
+            width: 52,
+            height: 52,
+            borderRadius: 14,
+            background: color,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexDirection: 'column',
+          }}>
+            <span style={{ color: '#fff', fontWeight: 800, fontSize: 20, lineHeight: 1 }}>
+              {point.averageRating.toFixed(1)}
+            </span>
+            <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 10, lineHeight: 1.2 }}>/ 5</span>
+          </div>
+
+          <div>
+            <StarDisplay value={point.averageRating} />
+            <p style={{ margin: '4px 0 0', fontSize: 12, color: '#7a6248' }}>
+              {point.averageRating >= 4
+                ? 'Excellent'
+                : point.averageRating >= 3
+                  ? 'Good'
+                  : point.averageRating >= 2
+                    ? 'Average'
+                    : 'Below average'}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Map() {
   const mapRef = useRef<mapboxgl.Map | null>(null)
   const mapContainerRef = useRef<HTMLDivElement | null>(null)
   const accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? process.env.NEXT_PUBLIC_MAPBOX_TOKEN
+
+  const [activePoint, setActivePoint] = useState<FocusMapPointDetail | null>(null)
 
   useEffect(() => {
     if (!accessToken || !mapContainerRef.current || mapRef.current) {
@@ -56,27 +199,19 @@ export default function Map() {
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
       style: 'mapbox://styles/mapbox/streets-v12',
-      center: [2.34462, 48.85944], // starting position [lng, lat]. Note that lat must be set between -90 and 90
-      zoom: 12.28 // starting zoom
+      center: [2.34462, 48.85944],
+      zoom: 12.28,
     });
     mapRef.current = map
 
-    const popup = new mapboxgl.Popup({ closeButton: false, closeOnClick: true })
-
     const focusMapPoint = (point: FocusMapPointDetail) => {
-      const coordinates: [number, number] = [point.longitude, point.latitude]
-
       map.easeTo({
-        center: coordinates,
+        center: [point.longitude, point.latitude],
         zoom: Math.max(map.getZoom(), 14),
         duration: 700,
         essential: true,
       })
-
-      popup
-        .setLngLat(coordinates)
-        .setHTML(`<div style="color:#000;"><strong>${point.name}</strong><br/>${point.averageRating.toFixed(2)} / 5 (${point.ratingCount})</div>`)
-        .addTo(map)
+      setActivePoint(point)
     }
 
     const handleFocusEvent = (event: Event) => {
@@ -86,6 +221,12 @@ export default function Map() {
     }
 
     window.addEventListener(FOCUS_MAP_POINT_EVENT, handleFocusEvent)
+
+    // Dismiss card on blank map click
+    map.on('click', (event) => {
+      const features = map.queryRenderedFeatures(event.point, { layers: [LAYER_ID] })
+      if (features.length === 0) setActivePoint(null)
+    })
 
     map.on('load', () => {
       map.addSource(SOURCE_ID, {
@@ -144,9 +285,7 @@ export default function Map() {
 
       fetch('/api/ratings/map?scope=all')
         .then(async (response) => {
-          if (!response.ok) {
-            throw new Error('Failed to load ratings map points')
-          }
+          if (!response.ok) throw new Error('Failed to load ratings map points')
           return (await response.json()) as RatingsMapResponse
         })
         .then((payload) => {
@@ -159,9 +298,6 @@ export default function Map() {
         })
     })
 
-    // mapRef.current.addControl(new mapboxgl.NavigationControl(), 'top-right')
-    // mapRef.current.addControl(new mapboxgl.FullscreenControl(), 'top-right')
-
     const resizeObserver = new ResizeObserver(() => {
       mapRef.current?.resize()
     })
@@ -170,7 +306,6 @@ export default function Map() {
     return () => {
       window.removeEventListener(FOCUS_MAP_POINT_EVENT, handleFocusEvent)
       resizeObserver.disconnect()
-      popup.remove()
       mapRef.current?.remove()
       mapRef.current = null
     }
@@ -178,7 +313,19 @@ export default function Map() {
 
   return (
     <div style={{ position: 'fixed', inset: 0 }}>
+      <style>{`
+        @keyframes barCardIn {
+          from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+          to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+      `}</style>
+
       <div id='map-container' ref={mapContainerRef} style={{ width: '100%', height: '100%' }} />
+
+      {activePoint && (
+        <BarCard point={activePoint} onClose={() => setActivePoint(null)} />
+      )}
+
       {!accessToken && (
         <div
           style={{
@@ -187,8 +334,8 @@ export default function Map() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: '#f8fafc',
-            color: '#b91c1c',
+            background: '#f6f0e7',
+            color: '#c23b39',
             fontWeight: 600,
             padding: '1rem',
             textAlign: 'center',

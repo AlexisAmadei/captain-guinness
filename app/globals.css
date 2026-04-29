@@ -4,25 +4,33 @@ html,
 body {
   min-height: 100%;
   background-color: #f6f0e7;
-  color: #24190e;
+  color: #231608;
 }
 
 body {
   background-image:
-    radial-gradient(circle at top left, rgba(255, 255, 255, 0.7), transparent 38%),
-    radial-gradient(circle at 88% 8%, rgba(248, 192, 115, 0.18), transparent 30%),
-    linear-gradient(180deg, #fbf7f0 0%, #f6f0e7 38%, #f2eadf 100%);
+    radial-gradient(circle at top left, rgba(255,255,255,0.65), transparent 36%),
+    radial-gradient(circle at 86% 6%, rgba(212,136,14,0.13), transparent 28%),
+    linear-gradient(180deg, #fdf8f0 0%, #f6f0e7 40%, #f0e8db 100%);
   background-attachment: fixed;
 }
 
-::selection {
-  background: #f0aa4a;
-  color: #271500;
+/* Dark mode canvas */
+html.dark body {
+  background-color: #0f0b07;
+  background-image:
+    radial-gradient(circle at top left, rgba(30,17,4,0.8), transparent 40%),
+    radial-gradient(circle at 86% 6%, rgba(180,104,8,0.10), transparent 30%),
+    linear-gradient(180deg, #150d04 0%, #0f0b07 50%, #0a0703 100%);
 }
 
+::selection {
+  background: #d4880e;
+  color: #fff8ec;
+}
 
 #map-container {
   height: 100%;
   width: 100%;
-  background-color: lightgrey;
+  background-color: #c8b89a;
 }

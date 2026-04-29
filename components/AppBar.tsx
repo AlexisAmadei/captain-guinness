@@ -9,7 +9,7 @@ type AppBarProps = {
   title?: string;
 };
 
-export function AppBar({ title = "Captain" }: AppBarProps) {
+export function AppBar({ title = "Captain Guiness" }: AppBarProps) {
   const handleLogout = async () => {
     await logout();
   };
@@ -33,9 +33,6 @@ export function AppBar({ title = "Captain" }: AppBarProps) {
         mx="auto"
       >
         <VStack align="start" gap={0}>
-          <Text fontSize="xs" fontWeight="semibold" letterSpacing="0.24em" textTransform="uppercase" color="app.subtle">
-            Captain
-          </Text>
           <Text fontSize="lg" fontWeight="semibold" color="app.fg">
             {title}
           </Text>

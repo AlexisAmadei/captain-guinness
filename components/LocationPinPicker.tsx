@@ -104,7 +104,7 @@ export function LocationPinPicker({ latitude, longitude, onSelect }: LocationPin
   }
 
   return (
-    <Box position="relative" h="64" borderWidth={1} borderColor="gray.200" borderRadius="md" overflow="hidden">
+    <Box position="relative" h="64" borderWidth={1} borderColor="app.border" borderRadius="md" overflow="hidden">
       <Box ref={mapContainerRef} h="full" w="full" />
       <Text
         position="absolute"
@@ -120,8 +120,8 @@ export function LocationPinPicker({ latitude, longitude, onSelect }: LocationPin
       </Text>
       {loading && (
         <Stack position="absolute" inset={0} align="center" justify="center" bg="whiteAlpha.800">
-          <Spinner size="md" color="blue.500" />
-          <Text fontSize="sm" color="gray.700">Loading map...</Text>
+          <Spinner size="md" color="brand.500" />
+          <Text fontSize="sm" color="app.muted">Loading map...</Text>
         </Stack>
       )}
     </Box>

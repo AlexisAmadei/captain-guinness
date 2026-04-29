@@ -133,7 +133,7 @@ function PlaceSelectorContent() {
     return (
       <Container maxW="container.sm" py={8}>
         <Stack align="center" gap={4}>
-          <Spinner size="lg" color="blue.500" />
+          <Spinner size="lg" color="brand.500" />
           <Text>Finding nearby places...</Text>
         </Stack>
       </Container>
@@ -155,7 +155,7 @@ function PlaceSelectorContent() {
 
         {places.length === 0 ? (
           <Box textAlign="center" py={8}>
-            <Text color="gray.500">No places found nearby. You can still submit without selecting a place.</Text>
+            <Text color="app.muted">No places found nearby. You can still submit without selecting a place.</Text>
           </Box>
         ) : (
           <>
@@ -174,15 +174,15 @@ function PlaceSelectorContent() {
                   key={place.id}
                   p={4}
                   borderWidth={2}
-                  borderColor={selectedPlace === place.id ? "blue.500" : "gray.200"}
+                  borderColor={selectedPlace === place.id ? "brand.500" : "app.border"}
                   borderRadius="md"
                   cursor="pointer"
                   onClick={() => setSelectedPlace(place.id)}
-                  bg={selectedPlace === place.id ? "blue.50" : "white"}
-                  _hover={{ borderColor: "blue.300" }}
+                  bg={selectedPlace === place.id ? "brand.50" : "app.surfaceSolid"}
+                  _hover={{ borderColor: "brand.400" }}
                 >
                   <Text fontWeight="bold">{place.name}</Text>
-                  <Text fontSize="sm" color="gray.600">
+                  <Text fontSize="sm" color="app.muted">
                     {place.type} · {Math.round(place.distance)}m away
                   </Text>
                 </Box>
@@ -216,7 +216,7 @@ export default function PlaceSelectorPage() {
       fallback={
         <Container maxW="container.sm" py={8}>
           <Stack align="center" gap={4}>
-            <Spinner size="lg" color="blue.500" />
+            <Spinner size="lg" color="brand.500" />
             <Text>Loading...</Text>
           </Stack>
         </Container>

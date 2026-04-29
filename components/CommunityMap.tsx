@@ -315,7 +315,7 @@ export function CommunityMap() {
             <Button
               size="sm"
               variant={scope === "mine" ? "solid" : "outline"}
-              colorPalette="blue"
+              colorPalette="brand"
               onClick={() => setScope("mine")}
             >
               Mes notes
@@ -323,7 +323,7 @@ export function CommunityMap() {
             <Button
               size="sm"
               variant={scope === "all" ? "solid" : "outline"}
-              colorPalette="blue"
+              colorPalette="brand"
               onClick={() => setScope("all")}
             >
               Toutes les notes
@@ -348,7 +348,7 @@ export function CommunityMap() {
           top={3}
           left={3}
           size="sm"
-          colorPalette="blue"
+          colorPalette="brand"
           onClick={handleRecenter}
           loading={isRecentering}
         >
@@ -387,7 +387,7 @@ export function CommunityMap() {
               right: 0,
               bottom: 0,
               zIndex: 50,
-              background: "white",
+              background: "#fdf8f0",
               borderTopLeftRadius: 16,
               borderTopRightRadius: 16,
               padding: 16,
@@ -400,18 +400,18 @@ export function CommunityMap() {
                   width: 40,
                   height: 4,
                   borderRadius: 999,
-                  background: "#d4d4d8",
+                  background: "#c9a87a",
                   alignSelf: "center",
                 }}
               />
               <Text fontWeight="bold">{selectedPoint?.name ?? "Lieu"}</Text>
-              <Text fontSize="sm" color="gray.600">
+              <Text fontSize="sm" color="app.muted">
                 Note moyenne: {selectedPoint ? selectedPoint.averageRating.toFixed(2) : "—"} / 5
               </Text>
-              <Text fontSize="sm" color="gray.600">
+              <Text fontSize="sm" color="app.muted">
                 Nombre de notes: {selectedPoint?.ratingCount ?? 0}
               </Text>
-              <Text fontSize="sm" color="gray.600">
+              <Text fontSize="sm" color="app.muted">
                 Dernière note: {formatDate(selectedPoint?.lastRatedAt ?? null)}
               </Text>
             </Stack>

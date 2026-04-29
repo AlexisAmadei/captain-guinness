@@ -57,7 +57,7 @@ export function ProfileForms({
 
   return (
     <Stack gap={4}>
-      <Box p={4} bg="white" borderRadius="lg" borderWidth={1} borderColor="gray.200">
+      <Box p={4} bg="app.surfaceSolid" borderRadius="lg" borderWidth={1} borderColor="app.border">
         <Text fontWeight="semibold" mb={3}>
           Avatar
         </Text>
@@ -75,7 +75,7 @@ export function ProfileForms({
         </form>
       </Box>
 
-      <Box p={4} bg="white" borderRadius="lg" borderWidth={1} borderColor="gray.200">
+      <Box p={4} bg="app.surfaceSolid" borderRadius="lg" borderWidth={1} borderColor="app.border">
         <Text fontWeight="semibold" mb={3}>
           Pseudo
         </Text>
@@ -93,7 +93,7 @@ export function ProfileForms({
         </form>
       </Box>
 
-      <Box p={4} bg="white" borderRadius="lg" borderWidth={1} borderColor="gray.200">
+      <Box p={4} bg="app.surfaceSolid" borderRadius="lg" borderWidth={1} borderColor="app.border">
         <Text fontWeight="semibold" mb={3}>
           Email
         </Text>
@@ -111,7 +111,7 @@ export function ProfileForms({
         </form>
       </Box>
 
-      <Box p={4} bg="white" borderRadius="lg" borderWidth={1} borderColor="gray.200">
+      <Box p={4} bg="app.surfaceSolid" borderRadius="lg" borderWidth={1} borderColor="app.border">
         <Text fontWeight="semibold" mb={3}>
           Mot de passe
         </Text>

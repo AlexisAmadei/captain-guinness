@@ -9,8 +9,8 @@ const CommunityMap = dynamic(
     ssr: false,
     loading: () => (
       <Stack h="full" align="center" justify="center" gap={3}>
-        <Spinner size="lg" color="blue.500" />
-        <Text fontSize="sm" color="gray.600">
+        <Spinner size="lg" color="brand.500" />
+        <Text fontSize="sm" color="app.muted">
           Chargement de la carte...
         </Text>
       </Stack>

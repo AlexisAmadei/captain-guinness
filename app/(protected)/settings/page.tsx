@@ -20,7 +20,7 @@ export default function SettingsPage() {
                 h="12"
                 borderRadius={0}
                 borderBottomWidth={1}
-                borderColor="gray.200"
+                borderColor="app.border"
               >
                 <Link href="/settings/profile">
                   <Text>Profile</Text>
@@ -32,7 +32,7 @@ export default function SettingsPage() {
                 h="12"
                 borderRadius={0}
                 borderBottomWidth={1}
-                borderColor="gray.200"
+                borderColor="app.border"
               >
                 <Text>Email & Password</Text>
                 <Box as={BiChevronRight} />
@@ -42,7 +42,7 @@ export default function SettingsPage() {
                 h="12"
                 borderRadius={0}
                 borderBottomWidth={1}
-                borderColor="gray.200"
+                borderColor="app.border"
               >
                 <Text>Linked Accounts</Text>
                 <Box as={BiChevronRight} />
@@ -69,7 +69,7 @@ export default function SettingsPage() {
                 h="12"
                 borderRadius={0}
                 borderBottomWidth={1}
-                borderColor="gray.200"
+                borderColor="app.border"
               >
                 <Text>Notifications</Text>
                 <Box as={BiChevronRight} />
@@ -79,7 +79,7 @@ export default function SettingsPage() {
                 h="12"
                 borderRadius={0}
                 borderBottomWidth={1}
-                borderColor="gray.200"
+                borderColor="app.border"
               >
                 <Text>Theme</Text>
                 <Box as={BiChevronRight} />
@@ -106,7 +106,7 @@ export default function SettingsPage() {
                 h="12"
                 borderRadius={0}
                 borderBottomWidth={1}
-                borderColor="gray.200"
+                borderColor="app.border"
               >
                 <Text>Help & Feedback</Text>
                 <Box as={BiChevronRight} />
@@ -116,7 +116,7 @@ export default function SettingsPage() {
                 h="12"
                 borderRadius={0}
                 borderBottomWidth={1}
-                borderColor="gray.200"
+                borderColor="app.border"
               >
                 <Text>About</Text>
                 <Box as={BiChevronRight} />
