@@ -34,7 +34,7 @@ function getScope(value: string | null): Scope {
 
 function getGroupKey(row: RatingRow) {
   if (row.place_id) {
-    return `place:${row.place_id}`;
+    return row.place_id.startsWith("mapbox:") ? row.place_id : `place:${row.place_id}`;
   }
 
   return `coord:${row.latitude.toFixed(4)}:${row.longitude.toFixed(4)}`;

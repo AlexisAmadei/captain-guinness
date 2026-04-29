@@ -32,18 +32,58 @@ function PlaceSelectorContent() {
 
   useEffect(() => {
     const fetchNearbyPlaces = async () => {
+      const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
+      if (!token) {
+        setError("Map service unavailable");
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
-        const response = await fetch(
-          `/api/places/nearby?latitude=${latitude}&longitude=${longitude}`,
-        );
+
+        const url = new URL("https://api.mapbox.com/search/searchbox/v1/category/bar,pub,restaurant,cafe,night_club");
+        url.searchParams.set("proximity", `${longitude},${latitude}`);
+        url.searchParams.set("limit", "25");
+        url.searchParams.set("language", "fr");
+        url.searchParams.set("access_token", token);
+
+        const response = await fetch(url.toString());
 
         if (!response.ok) {
           throw new Error("Failed to fetch nearby places");
         }
 
         const data = await response.json();
-        setPlaces(data.places || []);
+        const features: Array<{
+          properties: { mapbox_id: string; name: string; poi_category?: string[] };
+          geometry: { coordinates: [number, number] };
+        }> = Array.isArray(data.features) ? data.features : [];
+
+        const R = 6371000;
+        const nearby: Place[] = features
+          .map((f) => {
+            const [lon, lat] = f.geometry.coordinates;
+            const dLat = ((lat - latitude) * Math.PI) / 180;
+            const dLon = ((lon - longitude) * Math.PI) / 180;
+            const a =
+              Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos((latitude * Math.PI) / 180) *
+                Math.cos((lat * Math.PI) / 180) *
+                Math.sin(dLon / 2) *
+                Math.sin(dLon / 2);
+            return {
+              id: `mapbox:${f.properties.mapbox_id}`,
+              name: f.properties.name,
+              type: f.properties.poi_category?.[0] ?? "bar",
+              lat,
+              lon,
+              distance: R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)),
+            };
+          })
+          .sort((a, b) => a.distance - b.distance);
+
+        setPlaces(nearby);
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
@@ -65,8 +105,6 @@ function PlaceSelectorContent() {
     setSubmitting(true);
 
     try {
-      // Associate the rating with the selected place
-      // This would call another API endpoint to update the rating with the place_id
       const response = await fetch("/api/ratings/associate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -77,7 +115,6 @@ function PlaceSelectorContent() {
         throw new Error("Failed to associate place with rating");
       }
 
-      // Redirect to success page or home
       router.push("/");
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -122,7 +159,6 @@ function PlaceSelectorContent() {
           </Box>
         ) : (
           <>
-            {/* Search */}
             <Field.Root>
               <Field.Label>Search places</Field.Label>
               <Input
@@ -132,7 +168,6 @@ function PlaceSelectorContent() {
               />
             </Field.Root>
 
-            {/* Places List */}
             <Stack gap={3}>
               {filteredPlaces.map((place) => (
                 <Box
@@ -148,7 +183,7 @@ function PlaceSelectorContent() {
                 >
                   <Text fontWeight="bold">{place.name}</Text>
                   <Text fontSize="sm" color="gray.600">
-                    {place.type} · {place.distance.toFixed(2)}m away
+                    {place.type} · {Math.round(place.distance)}m away
                   </Text>
                 </Box>
               ))}
@@ -156,14 +191,8 @@ function PlaceSelectorContent() {
           </>
         )}
 
-        {/* Action Buttons */}
         <HStack gap={3} pt={4}>
-          <Button
-            flex={1}
-            variant="outline"
-            onClick={() => router.back()}
-            disabled={submitting}
-          >
+          <Button flex={1} variant="outline" onClick={() => router.back()} disabled={submitting}>
             Back
           </Button>
           <Button

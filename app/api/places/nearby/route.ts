@@ -1,45 +1,41 @@
 import { NextRequest, NextResponse } from "next/server";
 
-type OverpassElement = {
-  type: string;
-  id: number;
-  lat: number;
-  lon: number;
-  tags: Record<string, string>;
+type MapboxFeature = {
+  mapbox_id: string;
+  name: string;
+  place_formatted?: string;
+  feature_type: string;
+  geometry: {
+    type: string;
+    coordinates: [number, number];
+  };
+  properties: {
+    name: string;
+    mapbox_id: string;
+    feature_type: string;
+    full_address?: string;
+    place_formatted?: string;
+    poi_category?: string[];
+    poi_category_ids?: string[];
+    coordinates?: {
+      longitude: number;
+      latitude: number;
+    };
+  };
 };
 
-type OverpassResponse = {
-  elements: OverpassElement[];
+type MapboxSearchResponse = {
+  features: MapboxFeature[];
 };
 
-function getPlaceType(tags: Record<string, string>): string {
-  // Determine place type based on OSM tags
-  if (tags.amenity) return tags.amenity;
-  if (tags.shop) return tags.shop;
-  if (tags.tourism) return tags.tourism;
-  if (tags.leisure) return tags.leisure;
-  if (tags.historic) return tags.historic;
-  if (tags.natural) return tags.natural;
-  return "place";
-}
-
-function calculateDistance(
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number,
-): number {
-  const R = 6371000; // Earth's radius in meters
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371000;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 export async function GET(request: NextRequest) {
@@ -50,58 +46,50 @@ export async function GET(request: NextRequest) {
     const radius = parseInt(searchParams.get("radius") || "500");
 
     if (!latitude || !longitude) {
-      return NextResponse.json(
-        { error: "Missing latitude or longitude" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Missing latitude or longitude" }, { status: 400 });
     }
 
-    // Query Overpass API for points of interest
-    const overpassQuery = `
-      [out:json];
-      (
-        node["amenity"](around:${radius},${latitude},${longitude});
-        node["shop"](around:${radius},${latitude},${longitude});
-        node["tourism"](around:${radius},${latitude},${longitude});
-        node["leisure"](around:${radius},${latitude},${longitude});
-      );
-      out geom;
-    `;
+    const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
+    if (!token) {
+      return NextResponse.json({ error: "Mapbox token not configured" }, { status: 500 });
+    }
 
-    const response = await fetch("https://overpass-api.de/api/interpreter", {
-      method: "POST",
-      body: overpassQuery,
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-    });
+    const url = new URL("https://api.mapbox.com/search/searchbox/v1/category/bar,pub,restaurant,cafe,night_club");
+    url.searchParams.set("proximity", `${longitude},${latitude}`);
+    url.searchParams.set("limit", "25");
+    url.searchParams.set("language", "fr");
+    url.searchParams.set("access_token", token);
+
+    const response = await fetch(url.toString());
 
     if (!response.ok) {
-      throw new Error("Overpass API request failed");
+      throw new Error(`Mapbox API error: ${response.status}`);
     }
 
-    const data: OverpassResponse = await response.json();
+    const data: MapboxSearchResponse = await response.json();
 
-    // Process and format results
-    const places = data.elements
-      .filter((el) => el.type === "node" && el.tags && el.tags.name)
-      .map((el) => ({
-        id: String(el.id),
-        name: el.tags.name,
-        type: getPlaceType(el.tags),
-        lat: el.lat,
-        lon: el.lon,
-        distance: calculateDistance(latitude, longitude, el.lat, el.lon),
-      }))
+    const radiusMeters = radius;
+
+    const places = (data.features ?? [])
+      .map((feature) => {
+        const [lon, lat] = feature.geometry.coordinates;
+        const distance = calculateDistance(latitude, longitude, lat, lon);
+        return {
+          id: `mapbox:${feature.properties.mapbox_id}`,
+          name: feature.properties.name,
+          type: feature.properties.poi_category?.[0] ?? feature.properties.feature_type,
+          lat,
+          lon,
+          distance,
+        };
+      })
+      .filter((place) => place.distance <= radiusMeters)
       .sort((a, b) => a.distance - b.distance)
-      .slice(0, 50); // Return top 50 closest places
+      .slice(0, 25);
 
     return NextResponse.json({ places });
   } catch (error) {
     console.error("Places API error:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch nearby places" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to fetch nearby places" }, { status: 500 });
   }
 }

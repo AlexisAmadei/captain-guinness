@@ -1,10 +1,9 @@
-const CACHE_NAME = "captain-v1";
-const PRECACHE_URLS = ["/", "/manifest.webmanifest"];
+const CACHE_NAME = "captain-v2";
 
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS))
-  );
+// Only cache static assets — never navigation requests (HTML)
+const STATIC_EXTENSIONS = /\.(js|css|woff2?|png|jpg|jpeg|svg|ico|webp)(\?.*)?$/;
+
+self.addEventListener("install", () => {
   self.skipWaiting();
 });
 
@@ -22,33 +21,32 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") {
+  if (event.request.method !== "GET") return;
+
+  const url = new URL(event.request.url);
+
+  // Navigation requests (HTML pages) — always network-first, no caching
+  if (event.request.mode === "navigate") {
+    event.respondWith(fetch(event.request));
     return;
   }
 
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) {
-        return cached;
-      }
-
-      return fetch(event.request)
-        .then((response) => {
-          const isCacheable =
-            response.ok &&
-            response.type === "basic" &&
-            new URL(event.request.url).origin === self.location.origin;
-
-          if (isCacheable) {
-            const responseClone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseClone);
-            });
+  // Static assets from the same origin — cache-first
+  if (url.origin === self.location.origin && STATIC_EXTENSIONS.test(url.pathname)) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
+        if (cached) return cached;
+        return fetch(event.request).then((response) => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
           }
-
           return response;
-        })
-        .catch(() => caches.match("/"));
-    })
-  );
+        });
+      })
+    );
+    return;
+  }
+
+  // Everything else — network only
 });
