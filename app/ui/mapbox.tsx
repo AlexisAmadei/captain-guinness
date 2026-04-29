@@ -204,6 +204,17 @@ export default function Map() {
     });
     mapRef.current = map
 
+    const geolocate = new mapboxgl.GeolocateControl({
+      positionOptions: { enableHighAccuracy: true },
+      trackUserLocation: true,
+    })
+    map.addControl(geolocate)
+
+    // Centre on user once the map and geolocation are both ready
+    map.once('load', () => {
+      geolocate.trigger()
+    })
+
     const focusMapPoint = (point: FocusMapPointDetail) => {
       map.easeTo({
         center: [point.longitude, point.latitude],
