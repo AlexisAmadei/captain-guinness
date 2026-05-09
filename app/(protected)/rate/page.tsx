@@ -75,7 +75,7 @@ function InfoCard({
 }: Readonly<{ title: string; description: string; children: React.ReactNode }>) {
   return (
     <Box
-      rounded="panel"
+      borderRadius="lg"
       borderWidth="1px"
       borderColor="app.border"
       bg="app.surface"
@@ -271,16 +271,10 @@ function BarPicker({ onSelect }: { onSelect: (place: Place) => void }) {
 
   return (
     <Box position="relative" overflow="hidden">
-      <Box
-        position="absolute"
-        inset={0}
-        pointerEvents="none"
-        background="radial-gradient(circle at 12% 12%, rgba(255,255,255,0.72), transparent 30%), radial-gradient(circle at 88% 18%, rgba(224, 143, 30, 0.14), transparent 28%)"
-      />
       <Container maxW="container.sm" py={{ base: 6, md: 10 }} position="relative">
         <Stack gap={6}>
           <Box
-            rounded="panel"
+            borderRadius={'lg'}
             borderWidth="1px"
             borderColor="app.border"
             bg="app.surface"
@@ -289,7 +283,7 @@ function BarPicker({ onSelect }: { onSelect: (place: Place) => void }) {
             p={{ base: 5, md: 6 }}
           >
             <Stack gap={3}>
-              <Badge alignSelf="start" colorPalette="brand" rounded="full" px={3} py={1}>
+              <Badge alignSelf="start" bg="brand.800" color={'white'} rounded="full" px={3} py={1}>
                 Step 1 of 2
               </Badge>
               <Heading as="h1" size="xl" color="app.fg">
@@ -302,7 +296,7 @@ function BarPicker({ onSelect }: { onSelect: (place: Place) => void }) {
           </Box>
 
           <Box
-            rounded="panel"
+            borderRadius={'lg'}
             borderWidth="1px"
             borderColor="app.border"
             bg="app.surface"
@@ -371,7 +365,6 @@ function BarPicker({ onSelect }: { onSelect: (place: Place) => void }) {
                     <Button
                       key={s.mapbox_id}
                       variant="outline"
-                      colorPalette="brand"
                       justifyContent="flex-start"
                       borderColor="app.border"
                       bg="app.surfaceSolid"
@@ -404,10 +397,10 @@ function BarPicker({ onSelect }: { onSelect: (place: Place) => void }) {
                     <Button
                       key={place.id}
                       variant="outline"
-                      colorPalette="brand"
+                      // bg="red"
                       justifyContent="space-between"
                       borderColor="app.border"
-                      bg="app.surfaceSolid"
+                      // bg="app.surfaceSolid"
                       h="auto"
                       py={3}
                       px={4}
@@ -571,7 +564,7 @@ function RatingForm({ place }: { place: Place }) {
         <Stack gap={6}>
           {/* Header */}
           <Box
-            rounded="panel"
+            borderRadius={'lg'}
             borderWidth="1px"
             borderColor="app.border"
             bg="app.surface"
@@ -580,7 +573,7 @@ function RatingForm({ place }: { place: Place }) {
             p={{ base: 5, md: 6 }}
           >
             <Stack gap={3}>
-              <Badge alignSelf="start" colorPalette="brand" rounded="full" px={3} py={1}>
+              <Badge alignSelf="start" bg="brand.800" color={'white'} rounded="full" px={3} py={1}>
                 Step 2 of 2
               </Badge>
               <Heading as="h1" size="xl" color="app.fg">
@@ -590,7 +583,7 @@ function RatingForm({ place }: { place: Place }) {
                 <Text fontSize="sm" color="app.muted">
                   at
                 </Text>
-                <Badge colorPalette="brand" variant="subtle" fontSize="sm" px={3} py={1} rounded="full">
+                <Badge bg="harp.500" color={'white'} variant="subtle" fontSize="sm" px={3} py={1} rounded="full">
                   {place.name}
                 </Badge>
               </HStack>
@@ -598,7 +591,7 @@ function RatingForm({ place }: { place: Place }) {
           </Box>
 
           {error && (
-            <Box bg="rgba(194, 59, 57, 0.08)" p={4} rounded="cloud" borderWidth="1px" borderColor="app.danger">
+            <Box bg="rgba(194, 59, 57, 0.08)" p={4} borderRadius="lg" borderWidth="1px" borderColor="app.danger">
               <Text color="app.danger">{error}</Text>
             </Box>
           )}
@@ -607,7 +600,7 @@ function RatingForm({ place }: { place: Place }) {
             <Stack gap={6}>
               {/* Price */}
               <Box
-                rounded="panel"
+                borderRadius={'lg'}
                 borderWidth="1px"
                 borderColor="app.border"
                 bg="app.surface"
@@ -647,7 +640,7 @@ function RatingForm({ place }: { place: Place }) {
                       ["Rapport qualité/prix", "valueForMoney"],
                     ] as const
                   ).map(([label, key]) => (
-                    <Box key={key} rounded="cloud" borderWidth="1px" borderColor="app.border" bg="app.surfaceSolid" p={4}>
+                    <Box key={key} borderRadius="lg" borderWidth="1px" borderColor="app.border" bg="app.surfaceSolid" p={4}>
                       <Field.Root>
                         <Field.Label>{label}</Field.Label>
                         <StarRating
@@ -659,7 +652,7 @@ function RatingForm({ place }: { place: Place }) {
                   ))}
                 </SimpleGrid>
 
-                <Box rounded="cloud" borderWidth="1px" borderColor="app.border" bg="app.surfaceSolid" p={4}>
+                <Box borderRadius={'lg'} borderWidth="1px" borderColor="app.border" bg="app.surfaceSolid" p={4}>
                   <Field.Root required>
                     <Field.Label>
                       Note générale <Field.RequiredIndicator />
@@ -691,7 +684,7 @@ function RatingForm({ place }: { place: Place }) {
                 >
                   Back
                 </Button>
-                <Button flex={1} colorPalette="brand" type="submit" loading={loading} disabled={loading}>
+                <Button flex={1} bg="stout.400" type="submit" loading={loading} disabled={loading}>
                   Submit review
                 </Button>
               </HStack>

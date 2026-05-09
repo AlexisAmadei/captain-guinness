@@ -50,7 +50,7 @@ export function PhotoCapture({ onPhotoCapture, onClear }: PhotoCaptureProps) {
       borderStyle="dashed"
       borderColor="app.border"
       bg="app.surface"
-      rounded="panel"
+      borderRadius="lg"
       p={4}
       shadow="soft"
     >
@@ -71,14 +71,14 @@ export function PhotoCapture({ onPhotoCapture, onClear }: PhotoCaptureProps) {
             w="100%"
             h={{ base: "220px", md: "280px" }}
             objectFit="cover"
-            rounded="cloud"
+            borderRadius="lg"
             mb={3}
             shadow="soft"
           />
           <HStack>
             <Button
               flex={1}
-              colorPalette="brand"
+              bg="stout.400"
               onClick={handleCapture}
             >
               Retake
@@ -103,7 +103,7 @@ export function PhotoCapture({ onPhotoCapture, onClear }: PhotoCaptureProps) {
           onClick={handleCapture}
           flexDirection="column"
           gap={3}
-          rounded="cloud"
+          borderRadius="lg"
           shadow="sm"
           _hover={{
             transform: "translateY(-1px)",

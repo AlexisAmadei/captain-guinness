@@ -1,15 +1,12 @@
 "use client";
 
-import { Box, Button, HStack, Icon, Menu, Portal, Text, VStack } from "@chakra-ui/react";
+import { Box, Button, Flex, Icon, Menu, Portal, Text } from "@chakra-ui/react";
 import Link from "next/link";
 import { BiMenu } from "react-icons/bi";
 import { logout } from "@/app/auth/login/actions";
+import Image from "next/image";
 
-type AppBarProps = {
-  title?: string;
-};
-
-export function AppBar({ title = "Captain Guiness" }: AppBarProps) {
+export function AppBar() {
   const handleLogout = async () => {
     await logout();
   };
@@ -25,18 +22,25 @@ export function AppBar({ title = "Captain Guiness" }: AppBarProps) {
       shadow="soft"
       zIndex={10}
     >
-      <HStack
+      <Flex
+        justifyContent={'flex-start'}
+        alignItems={'center'}
         h="16"
         px={{ base: 4, md: 6 }}
-        justify="space-between"
-        maxW="7xl"
-        mx="auto"
       >
-        <VStack align="start" gap={0}>
-          <Text fontSize="lg" fontWeight="semibold" color="app.fg">
-            {title}
-          </Text>
-        </VStack>
+        <Text fontSize="2xl" fontWeight="semibold" color="var(--theme-soil)">
+          Captain
+        </Text>
+
+        <Image
+          src={'/guinness-logo.png'}
+          alt="Logo"
+          width={100}
+          height={100}
+        />
+      </Flex>
+
+      <Box position="absolute" top={0} right={0} p={4}>
         <Menu.Root positioning={{ placement: "bottom-end" }}>
           <Menu.Trigger asChild>
             <Button
@@ -68,7 +72,7 @@ export function AppBar({ title = "Captain Guiness" }: AppBarProps) {
             </Menu.Positioner>
           </Portal>
         </Menu.Root>
-      </HStack>
+      </Box>
     </Box>
   );
 }

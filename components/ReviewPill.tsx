@@ -175,7 +175,7 @@ export function ReviewPill() {
           borderRadius="full"
           boxSize="11"
           p="0"
-          colorPalette="brand"
+          bg='brand.900'
           boxShadow="0 4px 20px rgba(15,23,42,0.20)"
           aria-label="Ajouter un avis"
           onClick={() => router.push("/rate")}
@@ -188,7 +188,7 @@ export function ReviewPill() {
           borderRadius="full"
           px="4"
           h="11"
-          colorPalette="brand"
+          bg="brand.900"
           variant="solid"
           boxShadow="0 4px 20px rgba(15,23,42,0.20)"
           onClick={() => setIsOpen(true)}
@@ -376,7 +376,7 @@ export function ReviewPill() {
           <Button
             size="xs"
             variant="ghost"
-            colorPalette="brand"
+            bg="stout.400"
             borderRadius="full"
             gap="1"
             onClick={() => router.push("/rate")}

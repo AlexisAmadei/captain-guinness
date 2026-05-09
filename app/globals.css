@@ -1,36 +1,43 @@
 @import "tailwindcss";
 
+:root {
+  --theme-dark: #0000;
+  --theme-soil: #180000;
+  --theme-dark-steel: #181818;
+  --theme-sea-sponge: #D8C060;
+  --theme-lemoncholy: #F0D878;
+}
+
 html,
 body {
   min-height: 100%;
-  background-color: #f6f0e7;
-  color: #231608;
+  background-color: var(--chakra-colors-app-canvas);
+  color: var(--chakra-colors-app-fg);
 }
 
 body {
   background-image:
-    radial-gradient(circle at top left, rgba(255,255,255,0.65), transparent 36%),
-    radial-gradient(circle at 86% 6%, rgba(212,136,14,0.13), transparent 28%),
-    linear-gradient(180deg, #fdf8f0 0%, #f6f0e7 40%, #f0e8db 100%);
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.65), transparent 36%),
+    radial-gradient(circle at 86% 6%, color-mix(in srgb, var(--chakra-colors-brand-500) 13%, transparent), transparent 28%),
+    linear-gradient(180deg, var(--chakra-colors-app-surface-solid) 0%, var(--chakra-colors-app-canvas) 40%, #f0e8db 100%);
   background-attachment: fixed;
 }
 
 /* Dark mode canvas */
 html.dark body {
-  background-color: #0f0b07;
   background-image:
-    radial-gradient(circle at top left, rgba(30,17,4,0.8), transparent 40%),
-    radial-gradient(circle at 86% 6%, rgba(180,104,8,0.10), transparent 30%),
-    linear-gradient(180deg, #150d04 0%, #0f0b07 50%, #0a0703 100%);
+    radial-gradient(circle at top left, color-mix(in srgb, var(--chakra-colors-app-canvas) 80%, #000), transparent 40%),
+    radial-gradient(circle at 86% 6%, color-mix(in srgb, var(--chakra-colors-brand-500) 10%, transparent), transparent 30%),
+    linear-gradient(180deg, color-mix(in srgb, var(--chakra-colors-stout-800) 85%, #000) 0%, var(--chakra-colors-stout-900) 50%, var(--chakra-colors-stout-950) 100%);
 }
 
 ::selection {
-  background: #d4880e;
-  color: #fff8ec;
+  background: var(--chakra-colors-brand-500);
+  color: var(--chakra-colors-brand-50);
 }
 
 #map-container {
   height: 100%;
   width: 100%;
-  background-color: #c8b89a;
+  background-color: var(--chakra-colors-stout-950);
 }

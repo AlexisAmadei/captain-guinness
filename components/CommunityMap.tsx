@@ -315,7 +315,7 @@ export function CommunityMap() {
             <Button
               size="sm"
               variant={scope === "mine" ? "solid" : "outline"}
-              colorPalette="brand"
+              bg="stout.400"
               onClick={() => setScope("mine")}
             >
               Mes notes
@@ -323,7 +323,7 @@ export function CommunityMap() {
             <Button
               size="sm"
               variant={scope === "all" ? "solid" : "outline"}
-              colorPalette="brand"
+              bg="stout.400"
               onClick={() => setScope("all")}
             >
               Toutes les notes
@@ -348,7 +348,7 @@ export function CommunityMap() {
           top={3}
           left={3}
           size="sm"
-          colorPalette="brand"
+          bg="stout.400"
           onClick={handleRecenter}
           loading={isRecentering}
         >
