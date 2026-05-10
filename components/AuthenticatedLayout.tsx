@@ -16,7 +16,7 @@ export function AuthenticatedLayout({
   return (
     <Stack h="100dvh" gap={0}>
       {/* Top AppBar */}
-      <AppBar title={title} />
+      <AppBar />
 
       {/* Main Content */}
       <Box
