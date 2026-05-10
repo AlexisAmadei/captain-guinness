@@ -8,11 +8,24 @@ type RatingRow = {
   id: string;
   user_id: string;
   rating: number;
+  taste_rating: number | null;
+  foam_rating: number | null;
+  temperature_rating: number | null;
+  presentation_rating: number | null;
+  value_for_money_rating: number | null;
   bar_name: string | null;
   latitude: number;
   longitude: number;
   place_id: string | null;
   created_at: string | null;
+};
+
+type CategoryAverages = {
+  taste: number | null;
+  foam: number | null;
+  temperature: number | null;
+  presentation: number | null;
+  valueForMoney: number | null;
 };
 
 type MapPoint = {
@@ -25,6 +38,7 @@ type MapPoint = {
   averageRating: number;
   ratingCount: number;
   lastRatedAt: string | null;
+  categoryAverages: CategoryAverages;
 };
 
 function getScope(value: string | null): Scope {
@@ -72,7 +86,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from("ratings")
-      .select("id,user_id,rating,bar_name,latitude,longitude,place_id,created_at")
+      .select("id,user_id,rating,taste_rating,foam_rating,temperature_rating,presentation_rating,value_for_money_rating,bar_name,latitude,longitude,place_id,created_at")
       .order("created_at", { ascending: false })
       .limit(5000);
 
@@ -88,25 +102,43 @@ export async function GET(request: NextRequest) {
     }
 
     const ratings = (data ?? []) as RatingRow[];
-    const grouped = new Map<
-      string,
-      {
-        id: string;
-        placeId: string | null;
-        barName: string | null;
-        latitude: number;
-        longitude: number;
-        sum: number;
-        count: number;
-        lastRatedAt: string | null;
-      }
-    >();
+
+    type CategoryKey = 'taste' | 'foam' | 'temperature' | 'presentation' | 'valueForMoney';
+    type GroupEntry = {
+      id: string;
+      placeId: string | null;
+      barName: string | null;
+      latitude: number;
+      longitude: number;
+      sum: number;
+      count: number;
+      lastRatedAt: string | null;
+      catSum: Record<CategoryKey, number>;
+      catCount: Record<CategoryKey, number>;
+    };
+
+    const CATEGORY_COLS: Array<[CategoryKey, keyof RatingRow]> = [
+      ['taste', 'taste_rating'],
+      ['foam', 'foam_rating'],
+      ['temperature', 'temperature_rating'],
+      ['presentation', 'presentation_rating'],
+      ['valueForMoney', 'value_for_money_rating'],
+    ];
+
+    const grouped = new Map<string, GroupEntry>();
 
     for (const row of ratings) {
       const key = getGroupKey(row);
       const current = grouped.get(key);
 
       if (!current) {
+        const catSum = {} as Record<CategoryKey, number>;
+        const catCount = {} as Record<CategoryKey, number>;
+        for (const [cat, col] of CATEGORY_COLS) {
+          const v = row[col] as number | null;
+          catSum[cat] = v ?? 0;
+          catCount[cat] = v != null ? 1 : 0;
+        }
         grouped.set(key, {
           id: key,
           placeId: row.place_id,
@@ -116,6 +148,8 @@ export async function GET(request: NextRequest) {
           sum: row.rating,
           count: 1,
           lastRatedAt: row.created_at,
+          catSum,
+          catCount,
         });
         continue;
       }
@@ -126,6 +160,14 @@ export async function GET(request: NextRequest) {
       current.sum += row.rating;
       current.count = nextCount;
 
+      for (const [cat, col] of CATEGORY_COLS) {
+        const v = row[col] as number | null;
+        if (v != null) {
+          current.catSum[cat] += v;
+          current.catCount[cat] += 1;
+        }
+      }
+
       if (!current.barName && row.bar_name) {
         current.barName = row.bar_name;
       }
@@ -135,17 +177,27 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const points: MapPoint[] = Array.from(grouped.values()).map((point) => ({
-      id: point.id,
-      placeId: point.placeId,
-      barName: point.barName,
-      name: point.barName ?? (point.placeId ? `Lieu ${point.placeId}` : "Lieu sans identifiant"),
-      latitude: point.latitude,
-      longitude: point.longitude,
-      averageRating: Number((point.sum / point.count).toFixed(2)),
-      ratingCount: point.count,
-      lastRatedAt: point.lastRatedAt,
-    }));
+    const points: MapPoint[] = Array.from(grouped.values()).map((point) => {
+      const categoryAverages: CategoryAverages = {
+        taste: point.catCount.taste > 0 ? Number((point.catSum.taste / point.catCount.taste).toFixed(2)) : null,
+        foam: point.catCount.foam > 0 ? Number((point.catSum.foam / point.catCount.foam).toFixed(2)) : null,
+        temperature: point.catCount.temperature > 0 ? Number((point.catSum.temperature / point.catCount.temperature).toFixed(2)) : null,
+        presentation: point.catCount.presentation > 0 ? Number((point.catSum.presentation / point.catCount.presentation).toFixed(2)) : null,
+        valueForMoney: point.catCount.valueForMoney > 0 ? Number((point.catSum.valueForMoney / point.catCount.valueForMoney).toFixed(2)) : null,
+      };
+      return {
+        id: point.id,
+        placeId: point.placeId,
+        barName: point.barName,
+        name: point.barName ?? (point.placeId ? `Lieu ${point.placeId}` : "Lieu sans identifiant"),
+        latitude: point.latitude,
+        longitude: point.longitude,
+        averageRating: Number((point.sum / point.count).toFixed(2)),
+        ratingCount: point.count,
+        lastRatedAt: point.lastRatedAt,
+        categoryAverages,
+      };
+    });
 
     return NextResponse.json({ points, scope, isAuthenticated: Boolean(user) });
   } catch (error) {

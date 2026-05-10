@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { FOCUS_MAP_POINT_EVENT, type FocusMapPointDetail } from '@/lib/map/events';
+import { FOCUS_MAP_POINT_EVENT, type FocusMapPointDetail, type CategoryAverages } from '@/lib/map/events';
 
 type MapPoint = {
   id: string;
@@ -13,6 +13,7 @@ type MapPoint = {
   longitude: number;
   averageRating: number;
   ratingCount: number;
+  categoryAverages?: CategoryAverages;
 }
 
 type RatingsMapResponse = {
@@ -37,6 +38,7 @@ function toGeoJson(points: MapPoint[]): GeoJSON.FeatureCollection<GeoJSON.Point>
         name: point.name,
         averageRating: point.averageRating,
         ratingCount: point.ratingCount,
+        categoryAverages: point.categoryAverages ?? null,
       },
     })),
   }
@@ -178,6 +180,40 @@ function BarCard({ point, onClose }: BarCardProps) {
             </p>
           </div>
         </div>
+
+        {/* Category breakdown */}
+        {point.categoryAverages && (() => {
+          const cats: Array<{ label: string; value: number | null }> = [
+            { label: 'Goût', value: point.categoryAverages!.taste },
+            { label: 'Mousse', value: point.categoryAverages!.foam },
+            { label: 'Température', value: point.categoryAverages!.temperature },
+            { label: 'Présentation', value: point.categoryAverages!.presentation },
+            { label: 'Qualité/prix', value: point.categoryAverages!.valueForMoney },
+          ].filter((c) => c.value != null)
+          if (cats.length === 0) return null
+          return (
+            <div style={{ marginTop: 10, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 12px' }}>
+              {cats.map(({ label, value }) => (
+                <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+                  <span style={{ fontSize: 11, color: '#7a6248', whiteSpace: 'nowrap' }}>{label}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <div style={{
+                      width: 28,
+                      height: 18,
+                      borderRadius: 5,
+                      background: ratingColor(value!),
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}>
+                      <span style={{ color: '#fff', fontSize: 10, fontWeight: 700 }}>{value!.toFixed(1)}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        })()}
       </div>
     </div>
   )
@@ -284,6 +320,16 @@ export default function Map() {
         const average = Number(feature.properties?.averageRating ?? 0)
         const count = Number(feature.properties?.ratingCount ?? 0)
 
+        let categoryAverages: CategoryAverages | undefined
+        const rawCat = feature.properties?.categoryAverages
+        if (rawCat) {
+          try {
+            categoryAverages = typeof rawCat === 'string' ? JSON.parse(rawCat) : rawCat
+          } catch {
+            // ignore malformed data
+          }
+        }
+
         focusMapPoint({
           id: String(feature.properties?.id ?? ''),
           name: barName,
@@ -291,6 +337,7 @@ export default function Map() {
           longitude: coordinates[0],
           averageRating: average,
           ratingCount: count,
+          categoryAverages,
         })
       })
 

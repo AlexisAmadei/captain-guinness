@@ -4,8 +4,9 @@ import {
   Badge,
   Box,
   Button,
-  Card,
+  Dialog,
   HStack,
+  Separator,
   Skeleton,
   Stack,
   Text,
@@ -13,7 +14,7 @@ import {
 import { FOCUS_MAP_POINT_EVENT, type FocusMapPointDetail } from "@/lib/map/events";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { LuChevronDown, LuPlus, LuStar, LuX } from "react-icons/lu";
+import { LuArrowUpRight, LuCrosshair, LuPlus, LuStar, LuX } from "react-icons/lu";
 
 type ReviewPoint = {
   id: string;
@@ -157,9 +158,9 @@ export function ReviewPill() {
     window.dispatchEvent(new CustomEvent(FOCUS_MAP_POINT_EVENT, { detail }));
   };
 
-  // ── Collapsed state ──────────────────────────────────────────────────────────
-  if (!isOpen) {
-    return (
+  return (
+    <>
+      {/* ── Floating pill buttons ────────────────────────────────────────────── */}
       <HStack
         position="fixed"
         bottom={{ base: 4, md: 5 }}
@@ -175,7 +176,7 @@ export function ReviewPill() {
           borderRadius="full"
           boxSize="11"
           p="0"
-          bg='brand.900'
+          bg="brand.900"
           boxShadow="0 4px 20px rgba(15,23,42,0.20)"
           aria-label="Ajouter un avis"
           onClick={() => router.push("/rate")}
@@ -217,175 +218,196 @@ export function ReviewPill() {
           )}
         </Button>
       </HStack>
-    );
-  }
 
-  // ── Expanded state ───────────────────────────────────────────────────────────
-  return (
-    <Card.Root
-      position="fixed"
-      left={{ base: 3, md: 5 }}
-      bottom={{ base: 4, md: 5 }}
-      zIndex={30}
-      w={{ base: "calc(100vw - 1.5rem)", sm: "21rem", md: "23rem" }}
-      maxH="min(60vh, 34rem)"
-      bg="bg"
-      borderWidth="1px"
-      borderColor="border"
-      borderRadius="2xl"
-      overflow="hidden"
-      boxShadow="0 20px 60px rgba(15,23,42,0.22)"
-      backdropFilter="blur(20px)"
-      transform={entered ? "translateY(0)" : "translateY(36px)"}
-      opacity={entered ? 1 : 0}
-      transition="transform 480ms cubic-bezier(0.16,1,0.3,1), opacity 260ms ease"
-      pointerEvents="auto"
-      role="region"
-      aria-label="Avis classés par note moyenne"
-    >
-      {/* Gradient accent */}
-      <Box h="1" bgGradient="to-r" gradientFrom="brand.600" gradientTo="brand.400" />
+      {/* ── Dialog ──────────────────────────────────────────────────────────── */}
+      <Dialog.Root
+        open={isOpen}
+        onOpenChange={({ open }) => setIsOpen(open)}
+        size="md"
+        scrollBehavior="inside"
+      >
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content borderRadius="2xl" overflow="hidden">
+            {/* Gradient accent */}
+            <Box h="1" bgGradient="to-r" gradientFrom="brand.600" gradientTo="brand.400" flexShrink={0} />
 
-      <Card.Body p="0" display="flex" flexDirection="column" minH={0}>
-        {/* Header */}
-        <HStack px="4" pt="4" pb="3" justify="space-between" flexShrink={0} borderBottomWidth="1px" borderColor="border">
-          <Stack gap="0" minW={0}>
-            <HStack gap="1.5">
-              <LuStar size={13} color="var(--chakra-colors-yellow-400)" />
-              <Text fontWeight="semibold" fontSize="sm">
-                Meilleurs bars
-              </Text>
-            </HStack>
-            <Text fontSize="xs" color="fg.muted">
-              {reviews.length} lieux · {totalRatings} notes
-              {overallAverage !== null && ` · moy. ${formatRating(overallAverage)}`}
-            </Text>
-          </Stack>
-          <Button
-            size="xs"
-            variant="ghost"
-            colorPalette="gray"
-            borderRadius="full"
-            boxSize="7"
-            p="0"
-            onClick={() => setIsOpen(false)}
-            aria-label="Masquer"
-          >
-            <LuX size={13} />
-          </Button>
-        </HStack>
-
-        {/* List */}
-        <Stack gap="0" flex="1" minH={0} overflowY="auto">
-          {loading ? (
-            <Stack gap="0" p="3">
-              {[0, 1, 2].map((i) => (
-                <Skeleton key={i} h="14" borderRadius="xl" mb="2" />
-              ))}
-            </Stack>
-          ) : error ? (
-            <Box px="4" py="3">
-              <Text fontSize="sm" color="red.500">{error}</Text>
-            </Box>
-          ) : reviews.length === 0 ? (
-            <Box px="4" py="6" textAlign="center">
-              <Text fontSize="sm" color="fg.muted">Aucun avis pour le moment.</Text>
-            </Box>
-          ) : (
-            reviews.map((review, index) => {
-              const date = formatLastRatedAt(review.lastRatedAt);
-              return (
-                <HStack
-                  key={review.id}
-                  as="button"
-                  align="center"
-                  gap="3"
-                  px="4"
-                  py="2.5"
-                  cursor="pointer"
-                  textAlign="left"
-                  borderBottomWidth={index < reviews.length - 1 ? "1px" : "0"}
-                  borderColor="border"
-                  transition="background 100ms ease"
-                  _hover={{ bg: "bg.subtle" }}
-                  _focusVisible={{ outline: "2px solid", outlineColor: "brand.500", outlineOffset: "-2px" }}
-                  onClick={() => { focusPointOnMap(review); setIsOpen(false); }}
-                  aria-label={`Voir ${review.name} sur la carte`}
-                >
-                  {/* Rank */}
-                  <Text
-                    flexShrink={0}
-                    w="5"
-                    fontSize="xs"
-                    fontWeight="semibold"
-                    color={index === 0 ? "app.accent" : "fg.muted"}
-                    textAlign="center"
-                  >
-                    {index + 1}
+            <Dialog.Header px="5" pt="4" pb="0" flexShrink={0}>
+              <HStack justify="space-between" align="flex-start">
+                <Stack gap="0.5">
+                  <HStack gap="1.5">
+                    <LuStar size={14} color="var(--chakra-colors-yellow-400)" />
+                    <Dialog.Title fontSize="md" fontWeight="semibold">Meilleurs bars</Dialog.Title>
+                  </HStack>
+                  <Text fontSize="xs" color="fg.muted">
+                    {reviews.length} lieux · {totalRatings} notes
                   </Text>
+                </Stack>
+                <Dialog.CloseTrigger asChild>
+                  <Button size="xs" variant="ghost" colorPalette="gray" borderRadius="full" boxSize="7" p="0" aria-label="Fermer">
+                    <LuX size={13} />
+                  </Button>
+                </Dialog.CloseTrigger>
+              </HStack>
 
-                  {/* Info */}
-                  <Stack gap="0.5" minW={0} flex="1">
-                    <Text
-                      fontWeight="medium"
-                      fontSize="sm"
-                      whiteSpace="nowrap"
-                      overflow="hidden"
-                      textOverflow="ellipsis"
-                    >
-                      {review.name}
+              {/* Overall stats */}
+              {overallAverage !== null && !loading && (
+                <HStack
+                  mt="3"
+                  p="3"
+                  bg="bg.subtle"
+                  borderRadius="xl"
+                  borderWidth="1px"
+                  borderColor="border"
+                  gap="4"
+                >
+                  <Stack gap="0" flex="1" align="center">
+                    <Text fontSize="2xl" fontWeight="bold" color="fg" lineHeight="1">
+                      {formatRating(overallAverage)}
                     </Text>
-                    <HStack gap="1.5">
-                      <StarRow value={review.averageRating} />
-                      <Text fontSize="xs" color="fg.muted">
-                        {formatCount(review.ratingCount)}
-                        {date ? ` · ${date}` : ""}
-                      </Text>
-                    </HStack>
+                    <Text fontSize="xs" color="fg.muted" mt="0.5">Note globale</Text>
+                    <StarRow value={overallAverage} />
                   </Stack>
-
-                  {/* Score badge */}
-                  <Badge
-                    flexShrink={0}
-                    borderRadius="lg"
-                    px="2"
-                    py="1"
-                    bg={ratingBg(review.averageRating)}
-                    color={ratingColor(review.averageRating)}
-                    fontSize="sm"
-                    fontWeight="bold"
-                  >
-                    {formatRating(review.averageRating)}
-                  </Badge>
+                  <Separator orientation="vertical" h="12" />
+                  <Stack gap="0" flex="1" align="center">
+                    <Text fontSize="2xl" fontWeight="bold" color="fg" lineHeight="1">
+                      {totalRatings}
+                    </Text>
+                    <Text fontSize="xs" color="fg.muted" mt="0.5">Notes au total</Text>
+                  </Stack>
+                  <Separator orientation="vertical" h="12" />
+                  <Stack gap="0" flex="1" align="center">
+                    <Text fontSize="2xl" fontWeight="bold" color="fg" lineHeight="1">
+                      {reviews.length}
+                    </Text>
+                    <Text fontSize="xs" color="fg.muted" mt="0.5">Lieux notés</Text>
+                  </Stack>
                 </HStack>
-              );
-            })
-          )}
-        </Stack>
+              )}
+            </Dialog.Header>
 
-        {/* Footer */}
-        <HStack
-          px="4"
-          py="2.5"
-          borderTopWidth="1px"
-          borderColor="border"
-          justify="space-between"
-          flexShrink={0}
-        >
-          <Text fontSize="xs" color="fg.muted">Trié par note moyenne</Text>
-          <Button
-            size="xs"
-            variant="ghost"
-            bg="stout.400"
-            borderRadius="full"
-            gap="1"
-            onClick={() => router.push("/rate")}
-          >
-            <LuPlus size={11} />
-            <Text fontSize="xs">Ajouter</Text>
-          </Button>
-        </HStack>
-      </Card.Body>
-    </Card.Root>
+            <Dialog.Body px="5" py="3">
+              <Stack gap="0">
+                {loading ? (
+                  <Stack gap="2">
+                    {[0, 1, 2].map((i) => (
+                      <Skeleton key={i} h="20" borderRadius="xl" />
+                    ))}
+                  </Stack>
+                ) : error ? (
+                  <Text fontSize="sm" color="red.500" py="2">{error}</Text>
+                ) : reviews.length === 0 ? (
+                  <Text fontSize="sm" color="fg.muted" py="6" textAlign="center">
+                    Aucun avis pour le moment.
+                  </Text>
+                ) : (
+                  reviews.map((review, index) => {
+                    const date = formatLastRatedAt(review.lastRatedAt);
+                    return (
+                      <Box
+                        key={review.id}
+                        borderBottomWidth={index < reviews.length - 1 ? "1px" : "0"}
+                        borderColor="border"
+                        py="3"
+                      >
+                        <HStack align="flex-start" gap="3">
+                          {/* Rank */}
+                          <Text
+                            flexShrink={0}
+                            w="5"
+                            fontSize="xs"
+                            fontWeight="semibold"
+                            color={index === 0 ? "app.accent" : "fg.muted"}
+                            textAlign="center"
+                            pt="0.5"
+                          >
+                            {index + 1}
+                          </Text>
+
+                          {/* Info */}
+                          <Stack gap="1" minW={0} flex="1">
+                            <Text
+                              fontWeight="medium"
+                              fontSize="sm"
+                              whiteSpace="nowrap"
+                              overflow="hidden"
+                              textOverflow="ellipsis"
+                            >
+                              {review.name}
+                            </Text>
+                            <HStack gap="1.5">
+                              <StarRow value={review.averageRating} />
+                              <Text fontSize="xs" color="fg.muted">
+                                {formatCount(review.ratingCount)}
+                                {date ? ` · ${date}` : ""}
+                              </Text>
+                            </HStack>
+
+                            {/* CTAs */}
+                            <HStack gap="2" mt="0.5" flexWrap="wrap">
+                              <Button
+                                size="xs"
+                                variant="outline"
+                                borderRadius="full"
+                                gap="1"
+                                onClick={() => router.push(`/place/${encodeURIComponent(review.placeId ?? review.id)}`)}
+                              >
+                                <LuArrowUpRight size={11} />
+                                Voir tous les avis
+                              </Button>
+                              <Button
+                                size="xs"
+                                variant="solid"
+                                bg="brand.900"
+                                borderRadius="full"
+                                gap="1"
+                                onClick={() => { focusPointOnMap(review); setIsOpen(false); }}
+                              >
+                                <LuCrosshair size={11} />
+                                Localiser
+                              </Button>
+                            </HStack>
+                          </Stack>
+
+                          {/* Score badge */}
+                          <Badge
+                            flexShrink={0}
+                            borderRadius="lg"
+                            px="2"
+                            py="1"
+                            bg={ratingBg(review.averageRating)}
+                            color={ratingColor(review.averageRating)}
+                            fontSize="sm"
+                            fontWeight="bold"
+                          >
+                            {formatRating(review.averageRating)}
+                          </Badge>
+                        </HStack>
+                      </Box>
+                    );
+                  })
+                )}
+              </Stack>
+            </Dialog.Body>
+
+            <Dialog.Footer px="5" py="3" borderTopWidth="1px" borderColor="border" flexShrink={0}>
+              <Text fontSize="xs" color="fg.muted" flex="1">Trié par note moyenne</Text>
+              <Button
+                size="xs"
+                variant="ghost"
+                bg="stout.400"
+                borderRadius="full"
+                gap="1"
+                color="white"
+                onClick={() => router.push("/rate")}
+              >
+                <LuPlus size={11} />
+                Ajouter un avis
+              </Button>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Dialog.Root>
+    </>
   );
 }

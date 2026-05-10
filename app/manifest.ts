@@ -2,9 +2,9 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Captain",
-    short_name: "Captain",
-    description: "Rate and discover great bars around you.",
+    name: "Captain Guiness",
+    short_name: "CaptainGuiness",
+    description: "Find the best Guinness around you.",
     start_url: "/",
     scope: "/",
     display: "fullscreen",
