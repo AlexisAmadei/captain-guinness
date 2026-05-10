@@ -5,15 +5,7 @@ import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
-export type ProfileActionState = {
-  status: "idle" | "success" | "error";
-  message: string;
-};
-
-export const initialProfileActionState: ProfileActionState = {
-  status: "idle",
-  message: "",
-};
+import type { ProfileActionState } from "./types";
 
 function getEmailRedirectTo(headerStore: Headers) {
   const envSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;

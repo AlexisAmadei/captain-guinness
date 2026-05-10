@@ -14,7 +14,7 @@ import {
 import { FOCUS_MAP_POINT_EVENT, type CategoryAverages, type FocusMapPointDetail } from "@/lib/map/events";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { LuArrowUpRight, LuCrosshair, LuPlus, LuStar, LuX } from "react-icons/lu";
+import { LuArrowUpRight, LuCrosshair, LuPlus, LuStar, LuTrash2, LuX } from "react-icons/lu";
 
 type ReviewPoint = {
   id: string;
@@ -93,6 +93,7 @@ export function ReviewPill() {
   const [error, setError] = useState<string | null>(null);
   const [entered, setEntered] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => setEntered(true));
@@ -146,6 +147,18 @@ export function ReviewPill() {
     const weighted = reviews.reduce((sum, r) => sum + r.averageRating * r.ratingCount, 0);
     return weighted / totalRatings;
   }, [reviews, totalRatings]);
+
+  const handleDelete = async (review: ReviewPoint) => {
+    setDeletingId(review.id);
+    try {
+      const res = await fetch(`/api/ratings/place/${encodeURIComponent(review.id)}`, { method: "DELETE" });
+      if (res.ok) {
+        setReviews((prev) => prev.filter((r) => r.id !== review.id));
+      }
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const focusPointOnMap = (review: ReviewPoint) => {
     const detail: FocusMapPointDetail = {
@@ -354,19 +367,34 @@ export function ReviewPill() {
                             </HStack>
                           </Stack>
 
-                          {/* Score badge */}
-                          <Badge
-                            flexShrink={0}
-                            borderRadius="lg"
-                            px="2"
-                            py="1"
-                            bg={ratingBg(review.averageRating)}
-                            color={ratingColor(review.averageRating)}
-                            fontSize="sm"
-                            fontWeight="bold"
-                          >
-                            {formatRating(review.averageRating)}
-                          </Badge>
+                          {/* Score badge + delete */}
+                          <Stack gap="1" align="flex-end" flexShrink={0}>
+                            <Button
+                              size="xs"
+                              variant="ghost"
+                              colorPalette="red"
+                              borderRadius="full"
+                              p="1"
+                              minW="0"
+                              h="auto"
+                              aria-label="Supprimer cet avis"
+                              loading={deletingId === review.id}
+                              onClick={() => handleDelete(review)}
+                            >
+                              <LuTrash2 size={13} />
+                            </Button>
+                            <Badge
+                              borderRadius="lg"
+                              px="2"
+                              py="1"
+                              bg={ratingBg(review.averageRating)}
+                              color={ratingColor(review.averageRating)}
+                              fontSize="sm"
+                              fontWeight="bold"
+                            >
+                              {formatRating(review.averageRating)}
+                            </Badge>
+                          </Stack>
                         </HStack>
                       </Box>
                     );

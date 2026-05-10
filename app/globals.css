@@ -11,24 +11,12 @@
 html,
 body {
   min-height: 100%;
-  background-color: var(--chakra-colors-app-canvas);
+  background-color: var(--theme-soil);
   color: var(--chakra-colors-app-fg);
 }
 
 body {
-  background-image:
-    radial-gradient(circle at top left, rgba(255, 255, 255, 0.65), transparent 36%),
-    radial-gradient(circle at 86% 6%, color-mix(in srgb, var(--chakra-colors-brand-500) 13%, transparent), transparent 28%),
-    linear-gradient(180deg, var(--chakra-colors-app-surface-solid) 0%, var(--chakra-colors-app-canvas) 40%, #f0e8db 100%);
-  background-attachment: fixed;
-}
-
-/* Dark mode canvas */
-html.dark body {
-  background-image:
-    radial-gradient(circle at top left, color-mix(in srgb, var(--chakra-colors-app-canvas) 80%, #000), transparent 40%),
-    radial-gradient(circle at 86% 6%, color-mix(in srgb, var(--chakra-colors-brand-500) 10%, transparent), transparent 30%),
-    linear-gradient(180deg, color-mix(in srgb, var(--chakra-colors-stout-800) 85%, #000) 0%, var(--chakra-colors-stout-900) 50%, var(--chakra-colors-stout-950) 100%);
+  background-color: var(--theme-soil);
 }
 
 ::selection {

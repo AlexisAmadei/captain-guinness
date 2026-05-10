@@ -63,7 +63,7 @@ const config = defineConfig({
     semanticTokens: {
       colors: {
         // ── Backgrounds ─────────────────────────────────────────────────────────
-        "app.canvas":      { value: { _light: "#f6f0e7",                   _dark: "#0f0b07"  } },
+        "app.canvas":      { value: { _light: "#f6f6f6",                   _dark: "#0f0b07"  } },
         "app.surface":     { value: { _light: "rgba(255,255,255,0.76)",    _dark: "rgba(26,17,6,0.82)" } },
         "app.surfaceSolid":{ value: { _light: "#fffaf3",                   _dark: "#1a1106"  } },
         // ── Borders ─────────────────────────────────────────────────────────────

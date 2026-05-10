@@ -31,6 +31,55 @@ const CATS: Array<[CatKey, keyof RatingRow]> = [
   ["valueForMoney", "value_for_money_rating"],
 ];
 
+export async function DELETE(_req: NextRequest, ctx: RouteContext<"/api/ratings/place/[id]">) {
+  const { id } = await ctx.params;
+
+  const cookieStore = await cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    {
+      cookies: {
+        getAll() { return cookieStore.getAll(); },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
+        },
+      },
+    },
+  );
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  let query = supabase.from("ratings").delete().eq("user_id", user.id);
+
+  if (id.startsWith("coord:")) {
+    const parts = id.split(":");
+    const lat = parseFloat(parts[1]);
+    const lng = parseFloat(parts[2]);
+    if (Number.isNaN(lat) || Number.isNaN(lng)) {
+      return NextResponse.json({ error: "Invalid coordinate key" }, { status: 400 });
+    }
+    const delta = 0.001;
+    query = query
+      .gte("latitude", lat - delta)
+      .lte("latitude", lat + delta)
+      .gte("longitude", lng - delta)
+      .lte("longitude", lng + delta)
+      .is("place_id", null);
+  } else {
+    query = query.eq("place_id", id);
+  }
+
+  const { error } = await query;
+  if (error) {
+    console.error("Delete ratings error:", error);
+    return NextResponse.json({ error: "Failed to delete ratings" }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true });
+}
+
 export async function GET(_req: NextRequest, ctx: RouteContext<"/api/ratings/place/[id]">) {
   const { id } = await ctx.params;
 

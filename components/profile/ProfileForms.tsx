@@ -2,8 +2,8 @@
 
 import { Alert, Box, Button, Field, Input, Stack, Text } from "@chakra-ui/react";
 import { useActionState } from "react";
+import { initialProfileActionState } from "@/app/(protected)/profile/types";
 import {
-  initialProfileActionState,
   updateAvatar,
   updateDisplayName,
   updateEmail,
