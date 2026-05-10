@@ -45,6 +45,25 @@ export async function loginWithGithub(formData: FormData) {
   redirect(data.url);
 }
 
+export async function loginWithGoogle(formData: FormData) {
+  const supabase = await createClient();
+  const headerStore = await headers();
+  const next = getSafeNextFromForm(formData, "/");
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: buildAuthCallbackUrl(headerStore, next),
+    },
+  });
+
+  if (error || !data.url) {
+    redirect(`/auth/login?error=${encodeURIComponent(error?.message ?? "OAuth init failed")}`);
+  }
+
+  redirect(data.url);
+}
+
 export async function loginWithMagicLink(formData: FormData) {
   const supabase = await createClient();
   const headerStore = await headers();

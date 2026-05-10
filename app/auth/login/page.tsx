@@ -10,7 +10,7 @@ import {
   Stack,
   Text,
 } from "@chakra-ui/react";
-import { login, loginWithGithub, loginWithMagicLink, sendPasswordReset } from "./actions";
+import { login, loginWithGithub, loginWithGoogle, loginWithMagicLink, sendPasswordReset } from "./actions";
 
 type LoginPageProps = {
   searchParams: Promise<{
@@ -70,6 +70,13 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             <Input type="hidden" name="next" value={safeNext} />
             <Button variant="outline" type="submit" w="full">
               Continuer avec GitHub
+            </Button>
+          </form>
+
+          <form action={loginWithGoogle}>
+            <Input type="hidden" name="next" value={safeNext} />
+            <Button variant="outline" type="submit" w="full">
+              Continuer avec Google
             </Button>
           </form>
 
