@@ -11,7 +11,7 @@ import {
   Stack,
   Text,
 } from "@chakra-ui/react";
-import { FOCUS_MAP_POINT_EVENT, type FocusMapPointDetail } from "@/lib/map/events";
+import { FOCUS_MAP_POINT_EVENT, type CategoryAverages, type FocusMapPointDetail } from "@/lib/map/events";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { LuArrowUpRight, LuCrosshair, LuPlus, LuStar, LuX } from "react-icons/lu";
@@ -25,6 +25,7 @@ type ReviewPoint = {
   averageRating: number;
   ratingCount: number;
   lastRatedAt: string | null;
+  categoryAverages: CategoryAverages;
 };
 
 type ReviewsMapResponse = {
@@ -154,6 +155,7 @@ export function ReviewPill() {
       longitude: review.longitude,
       averageRating: review.averageRating,
       ratingCount: review.ratingCount,
+      categoryAverages: review.categoryAverages,
     };
     window.dispatchEvent(new CustomEvent(FOCUS_MAP_POINT_EVENT, { detail }));
   };
@@ -225,63 +227,46 @@ export function ReviewPill() {
         onOpenChange={({ open }) => setIsOpen(open)}
         size="md"
         scrollBehavior="inside"
+        id="all-reviews-dialog"
       >
         <Dialog.Backdrop />
         <Dialog.Positioner>
-          <Dialog.Content borderRadius="2xl" overflow="hidden">
+          <Dialog.Content borderRadius="2xl" overflow="hidden" mx={2}>
             {/* Gradient accent */}
             <Box h="1" bgGradient="to-r" gradientFrom="brand.600" gradientTo="brand.400" flexShrink={0} />
 
             <Dialog.Header px="5" pt="4" pb="0" flexShrink={0}>
-              <HStack justify="space-between" align="flex-start">
-                <Stack gap="0.5">
-                  <HStack gap="1.5">
-                    <LuStar size={14} color="var(--chakra-colors-yellow-400)" />
-                    <Dialog.Title fontSize="md" fontWeight="semibold">Meilleurs bars</Dialog.Title>
-                  </HStack>
-                  <Text fontSize="xs" color="fg.muted">
-                    {reviews.length} lieux · {totalRatings} notes
-                  </Text>
-                </Stack>
-                <Dialog.CloseTrigger asChild>
-                  <Button size="xs" variant="ghost" colorPalette="gray" borderRadius="full" boxSize="7" p="0" aria-label="Fermer">
-                    <LuX size={13} />
-                  </Button>
-                </Dialog.CloseTrigger>
-              </HStack>
-
               {/* Overall stats */}
               {overallAverage !== null && !loading && (
                 <HStack
-                  mt="3"
+                  mt="6"
                   p="3"
                   bg="bg.subtle"
                   borderRadius="xl"
                   borderWidth="1px"
                   borderColor="border"
                   gap="4"
+                  w={'100%'}
                 >
                   <Stack gap="0" flex="1" align="center">
-                    <Text fontSize="2xl" fontWeight="bold" color="fg" lineHeight="1">
-                      {formatRating(overallAverage)}
-                    </Text>
-                    <Text fontSize="xs" color="fg.muted" mt="0.5">Note globale</Text>
-                    <StarRow value={overallAverage} />
-                  </Stack>
-                  <Separator orientation="vertical" h="12" />
-                  <Stack gap="0" flex="1" align="center">
-                    <Text fontSize="2xl" fontWeight="bold" color="fg" lineHeight="1">
+                    <Text fontSize="2xl" fontWeight="bold" color="fg" >
                       {totalRatings}
                     </Text>
-                    <Text fontSize="xs" color="fg.muted" mt="0.5">Notes au total</Text>
+                    <Text fontSize="xs" textAlign={'center'} color="fg.muted">Notes au total</Text>
                   </Stack>
                   <Separator orientation="vertical" h="12" />
                   <Stack gap="0" flex="1" align="center">
-                    <Text fontSize="2xl" fontWeight="bold" color="fg" lineHeight="1">
+                    <Text fontSize="2xl" fontWeight="bold" color="fg">
                       {reviews.length}
                     </Text>
                     <Text fontSize="xs" color="fg.muted" mt="0.5">Lieux notés</Text>
                   </Stack>
+
+                  <Dialog.CloseTrigger asChild>
+                    <Button size="md" variant="ghost" colorPalette="gray" borderRadius="full" boxSize="7" m="1" aria-label="Fermer">
+                      <LuX size={13} />
+                    </Button>
+                  </Dialog.CloseTrigger>
                 </HStack>
               )}
             </Dialog.Header>
