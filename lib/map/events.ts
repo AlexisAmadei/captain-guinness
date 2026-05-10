@@ -1,4 +1,4 @@
-export const FOCUS_MAP_POINT_EVENT = "captain-guiness:focus-map-point";
+export const FOCUS_MAP_POINT_EVENT = "captain-guinness:focus-map-point";
 
 export type CategoryAverages = {
   taste: number | null;

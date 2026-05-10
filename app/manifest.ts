@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Captain Guiness",
-    short_name: "CaptainGuiness",
+    name: "Captain Guinness",
+    short_name: "Captain Guinness",
     description: "Find the best Guinness around you.",
     start_url: "/",
     scope: "/",

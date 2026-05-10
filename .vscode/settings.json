@@ -11,7 +11,7 @@
         "claude-code/claude-sonnet-4.6"
       ]
     },
-    "captain-guiness/.vscode/mcp.json: mapbox-mcp": {
+    "captain-guinness/.vscode/mcp.json: mapbox-mcp": {
       "allowedModels": [
         "copilot/auto",
         "copilotcli/claude-sonnet-4.5",
