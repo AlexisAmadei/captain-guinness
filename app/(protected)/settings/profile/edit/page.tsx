@@ -2,6 +2,7 @@ import { Container, Heading, Stack } from "@chakra-ui/react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import EditDisplayNameForm from "./EditDisplayNameForm";
+import EditEmailForm from "./EditEmailForm";
 
 export default async function EditProfilePage() {
   const supabase = await createClient();
@@ -25,6 +26,7 @@ export default async function EditProfilePage() {
           Edit Profile
         </Heading>
         <EditDisplayNameForm initialFullName={profile?.full_name || ""} />
+        <EditEmailForm currentEmail={user.email ?? ""} />
       </Stack>
     </Container>
   );
