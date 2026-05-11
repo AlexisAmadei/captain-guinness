@@ -12,7 +12,12 @@ export async function register(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const fullName = String(formData.get("fullName") ?? "").trim();
+  const termsAccepted = formData.get("termsAccepted") === "on";
   const next = sanitizeNextPath(String(formData.get("next") ?? ""), "/");
+
+  if (!termsAccepted) {
+    redirect(`/auth/register?error=${encodeURIComponent("Vous devez accepter les CGU et la politique de confidentialité.")}`);
+  }
 
   const { error } = await supabase.auth.signUp({
     email,

@@ -11,7 +11,7 @@ type AuthenticatedLayoutProps = {
 
 export function AuthenticatedLayout({
   children,
-  title = "Captain",
+  title = "Captain Guinness",
 }: AuthenticatedLayoutProps) {
   return (
     <Stack h="100dvh" gap={0}>
