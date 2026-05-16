@@ -10,11 +10,15 @@ export async function updatePassword(formData: FormData) {
   const confirmPassword = String(formData.get("confirmPassword") ?? "");
 
   if (password.length < 8) {
-    redirect("/auth/reset-password?error=Password%20must%20be%20at%20least%208%20characters");
+    redirect("/auth/reset-password?error=Le%20mot%20de%20passe%20doit%20faire%20au%20moins%208%20caract%C3%A8res");
+  }
+
+  if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
+    redirect("/auth/reset-password?error=Le%20mot%20de%20passe%20doit%20contenir%20des%20lettres%20et%20des%20chiffres");
   }
 
   if (password !== confirmPassword) {
-    redirect("/auth/reset-password?error=Passwords%20do%20not%20match");
+    redirect("/auth/reset-password?error=Les%20mots%20de%20passe%20ne%20correspondent%20pas");
   }
 
   const {
@@ -23,7 +27,7 @@ export async function updatePassword(formData: FormData) {
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    redirect("/auth/login?error=Reset%20session%20expired.%20Request%20a%20new%20email.");
+    redirect("/auth/forgot-password?error=Lien%20expir%C3%A9.%20Demande%20un%20nouvel%20email.");
   }
 
   const { error } = await supabase.auth.updateUser({ password });
@@ -32,5 +36,5 @@ export async function updatePassword(formData: FormData) {
     redirect(`/auth/reset-password?error=${encodeURIComponent(error.message)}`);
   }
 
-  redirect("/auth/login?message=Password%20updated.%20You%20can%20now%20sign%20in.");
+  redirect("/auth/login?message=Mot%20de%20passe%20mis%20%C3%A0%20jour.%20Tu%20peux%20maintenant%20te%20connecter.");
 }

@@ -96,7 +96,7 @@ export async function sendPasswordReset(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
 
   if (!email) {
-    redirect("/auth/login?error=Email%20is%20required");
+    redirect("/auth/forgot-password?error=Email%20requis");
   }
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -104,10 +104,10 @@ export async function sendPasswordReset(formData: FormData) {
   });
 
   if (error) {
-    redirect(`/auth/login?error=${encodeURIComponent(error.message)}`);
+    redirect(`/auth/forgot-password?error=${encodeURIComponent(error.message)}`);
   }
 
-  redirect("/auth/login?message=Password%20reset%20email%20sent.");
+  redirect(`/auth/forgot-password?sent=true&email=${encodeURIComponent(email)}`);
 }
 
 export async function logout() {

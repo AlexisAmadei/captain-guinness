@@ -6,11 +6,11 @@ export const metadata = {
 };
 
 type Props = {
-  searchParams: Promise<{ email?: string; sent?: string }>;
+  searchParams: Promise<{ email?: string; sent?: string; error?: string }>;
 };
 
 export default async function ForgotPasswordPage({ searchParams }: Props) {
-  const { email, sent } = await searchParams;
+  const { email, sent, error } = await searchParams;
 
   return (
     <div style={{
@@ -92,6 +92,17 @@ export default async function ForgotPasswordPage({ searchParams }: Props) {
           <p style={{ fontSize: 15, color: "#7a6248", margin: "0 0 28px", lineHeight: 1.45 }}>
             Saisis ton email — on t&apos;envoie un lien pour créer un nouveau mot de passe.
           </p>
+
+          {error && (
+            <div style={{
+              background: "rgba(194,59,57,0.10)",
+              border: "1px solid rgba(194,59,57,0.40)",
+              borderRadius: 12, padding: "12px 14px", marginBottom: 18,
+              fontSize: 13, color: "#8a2a28", lineHeight: 1.4,
+            }}>
+              {error}
+            </div>
+          )}
 
           <form action={sendPasswordReset}>
             <label style={{ display: "block", marginBottom: 14 }}>

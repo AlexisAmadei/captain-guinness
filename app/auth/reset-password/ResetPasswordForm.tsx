@@ -56,7 +56,7 @@ export function ResetPasswordForm({ updatePasswordAction }: ResetPasswordFormPro
             placeholder="8 caractères min."
             minLength={8}
             required
-            style={{ ...fieldStyle, border: "1.5px solid #006b3c", boxShadow: "0 0 0 4px rgba(0,107,60,0.13)" }}
+            style={fieldStyle}
             onFocus={(e) => { e.target.style.border = "1.5px solid #006b3c"; e.target.style.boxShadow = "0 0 0 4px rgba(0,107,60,0.13)"; }}
             onBlur={(e) => { e.target.style.border = "1.5px solid #e4d4bb"; e.target.style.boxShadow = "none"; }}
           />
