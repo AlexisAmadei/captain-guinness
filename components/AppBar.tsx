@@ -52,8 +52,7 @@ export function AppBar() {
     <Box
       position="sticky"
       top={0}
-      bg="app.surface"
-      backdropFilter="blur(20px)"
+      bg="white"
       borderBottomWidth={1}
       borderColor="app.border"
       shadow="soft"
