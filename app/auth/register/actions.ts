@@ -19,7 +19,7 @@ export async function register(formData: FormData) {
     redirect(`/auth/register?error=${encodeURIComponent("Vous devez accepter les CGU et la politique de confidentialité.")}`);
   }
 
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -32,6 +32,10 @@ export async function register(formData: FormData) {
 
   if (error) {
     redirect(`/auth/register?error=${encodeURIComponent(error.message)}`);
+  }
+
+  if (data.user?.identities?.length === 0) {
+    redirect(`/auth/register?error=${encodeURIComponent("Un compte avec cet email existe déjà.")}`);
   }
 
   redirect("/auth/login?message=Inscription%20r%C3%A9ussie%20!%20Tu%20peux%20maintenant%20te%20connecter.");

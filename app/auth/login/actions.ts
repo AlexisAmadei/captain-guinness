@@ -89,27 +89,6 @@ export async function loginWithMagicLink(formData: FormData) {
   redirect("/auth/login?message=Magic%20link%20sent.%20Check%20your%20email.");
 }
 
-export async function sendPasswordReset(formData: FormData) {
-  const supabase = await createClient();
-  const headerStore = await headers();
-
-  const email = String(formData.get("email") ?? "").trim();
-
-  if (!email) {
-    redirect("/auth/forgot-password?error=Email%20requis");
-  }
-
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: buildAuthCallbackUrl(headerStore, "/auth/reset-password"),
-  });
-
-  if (error) {
-    redirect(`/auth/forgot-password?error=${encodeURIComponent(error.message)}`);
-  }
-
-  redirect(`/auth/forgot-password?sent=true&email=${encodeURIComponent(email)}`);
-}
-
 export async function logout() {
   const supabase = await createClient();
 

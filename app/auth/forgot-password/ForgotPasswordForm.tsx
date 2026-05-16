@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import NextLink from "next/link";
-import { sendPasswordReset } from "../login/actions";
+import { createClient } from "@/lib/supabase/client";
 
 function inputStyle(focused: boolean) {
   return {
@@ -22,8 +23,34 @@ interface Props {
   error?: string;
 }
 
-export function ForgotPasswordForm({ defaultEmail, error }: Props) {
+export function ForgotPasswordForm({ defaultEmail, error: initialError }: Props) {
+  const router = useRouter();
   const [focused, setFocused] = useState(false);
+  const [email, setEmail] = useState(defaultEmail ?? "");
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState(initialError ?? "");
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!email) return;
+
+    setPending(true);
+    setError("");
+
+    const supabase = createClient();
+    const { error: sbError } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/callback?next=/auth/reset-password`,
+    });
+
+    setPending(false);
+
+    if (sbError) {
+      setError(sbError.message);
+      return;
+    }
+
+    router.push(`/auth/forgot-password?sent=true&email=${encodeURIComponent(email)}`);
+  }
 
   return (
     <>
@@ -45,14 +72,15 @@ export function ForgotPasswordForm({ defaultEmail, error }: Props) {
         </div>
       )}
 
-      <form action={sendPasswordReset}>
+      <form onSubmit={handleSubmit}>
         <label style={{ display: "block", marginBottom: 14 }}>
           <div style={{ fontSize: 13, fontWeight: 500, color: "#7a6248", marginBottom: 6, letterSpacing: -0.1 }}>Email</div>
           <input
             name="email"
             type="email"
             placeholder="email@exemple.com"
-            defaultValue={defaultEmail ?? ""}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             autoFocus
             required
             style={inputStyle(focused)}
@@ -63,23 +91,25 @@ export function ForgotPasswordForm({ defaultEmail, error }: Props) {
 
         <button
           type="submit"
+          disabled={pending}
           style={{
             width: "100%", height: 52, borderRadius: 12,
-            background: "#130b02",
+            background: pending ? "#8c7b68" : "#130b02",
             color: "#fff7e6",
             border: "none",
             fontFamily: "inherit", fontSize: 16, fontWeight: 600,
             letterSpacing: -0.2,
             display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
             boxShadow: "0 8px 24px rgba(15,23,42,0.18), inset 0 1px 0 rgba(255,255,255,0.08)",
-            cursor: "pointer", marginBottom: 0,
+            cursor: pending ? "not-allowed" : "pointer", marginBottom: 0,
+            opacity: pending ? 0.75 : 1,
           }}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff7e6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="5" width="18" height="14" rx="2"/>
             <path d="m3 7 9 6 9-6"/>
           </svg>
-          Envoyer le lien
+          {pending ? "Envoi…" : "Envoyer le lien"}
         </button>
       </form>
 
