@@ -10,10 +10,12 @@ export type CategoryAverages = {
 
 export type FocusMapPointDetail = {
   id: string;
+  placeId?: string | null;
   name: string;
   latitude: number;
   longitude: number;
   averageRating: number;
   ratingCount: number;
+  lastRatedAt?: string | null;
   categoryAverages?: CategoryAverages;
 };

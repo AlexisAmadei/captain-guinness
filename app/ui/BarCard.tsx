@@ -1,16 +1,47 @@
 'use client';
+import { useRouter } from 'next/navigation';
 import { FocusMapPointDetail } from '@/lib/map/events';
-import { ratingColor } from './mapbox';
-import { StarDisplay } from './StarDisplay';
 
 export type BarCardProps = {
-  point: FocusMapPointDetail
-  onClose: () => void
+  point: FocusMapPointDetail;
+  onClose: () => void;
+};
+
+function tierGrad(avg: number): string {
+  if (avg >= 4.0) return 'linear-gradient(135deg,#16a34a,#0f766e)';
+  if (avg >= 3.0) return 'linear-gradient(135deg,#a16207,#c2410c)';
+  if (avg >= 2.0) return 'linear-gradient(135deg,#c2410c,#dc2626)';
+  return 'linear-gradient(135deg,#dc2626,#db2777)';
+}
+
+function StarRow({ value }: { value: number }) {
+  const full = Math.floor(value);
+  const half = value - full >= 0.25 && value - full < 0.75;
+  return (
+    <span style={{ display: 'inline-flex', gap: 1.5, fontSize: 11 }}>
+      {Array.from({ length: 5 }, (_, i) => {
+        const pos = i + 1;
+        const filled = pos <= full || (pos === full + 1 && half);
+        return (
+          <span key={i} style={{ color: filled ? '#d4880e' : '#c8c0b0', lineHeight: 1 }}>
+            ★
+          </span>
+        );
+      })}
+    </span>
+  );
+}
+
+function formatLastRatedAt(value: string | null) {
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'short' }).format(parsed);
 }
 
 export function BarCard({ point, onClose }: BarCardProps) {
-  const color = ratingColor(point.averageRating);
-  console.log('Rendering BarCard for', point);
+  const router = useRouter();
+  const date = formatLastRatedAt(point.lastRatedAt ?? null);
 
   return (
     <div
@@ -21,136 +52,149 @@ export function BarCard({ point, onClose }: BarCardProps) {
         transform: 'translateX(-50%)',
         zIndex: 20,
         width: 'min(22rem, calc(100vw - 2rem))',
-        background: 'rgba(253,248,240,0.97)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        borderRadius: 18,
-        boxShadow: '0 8px 40px rgba(61,36,9,0.18), 0 1px 4px rgba(61,36,9,0.10)',
+        background: '#fffaf3',
+        borderRadius: 16,
+        boxShadow: '0 24px 70px rgba(61,36,9,0.20)',
+        border: '1px solid #e4d4bb',
         overflow: 'hidden',
         animation: 'barCardIn 220ms cubic-bezier(0.16, 1, 0.3, 1)',
       }}
     >
-      {/* Colour accent bar keyed to rating */}
-      <div style={{ height: 4, background: color }} />
-
-      <div style={{ padding: '16px 18px 18px' }}>
-        {/* Header row */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 14 }}>
-          <div style={{ minWidth: 0 }}>
-            <p style={{
-              margin: 0,
+      <div style={{ padding: '14px 14px 14px' }}>
+        {/* Top row: badge + info + close */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 12 }}>
+          {/* Gradient score badge */}
+          <div
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 12,
+              background: tierGrad(point.averageRating),
+              color: '#fff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontFamily: '"Geist Mono",ui-monospace,monospace',
+              fontSize: 11.5,
               fontWeight: 700,
-              fontSize: 16,
-              color: '#231608',
-              lineHeight: 1.3,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-              maxWidth: '16rem',
-            }}>
-              {point.name}
-            </p>
-            <p style={{ margin: '2px 0 0', fontSize: 12, color: '#7a6248' }}>
-              {point.ratingCount === 1 ? '1 rating' : `${point.ratingCount} ratings`}
-            </p>
+              letterSpacing: -0.3,
+              flexShrink: 0,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+            }}
+          >
+            {point.averageRating.toFixed(1)}
           </div>
+
+          {/* Name + stars + meta */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div
+              style={{
+                fontWeight: 700,
+                fontSize: 14.5,
+                color: '#231608',
+                lineHeight: 1.2,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {point.name}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 4 }}>
+              <StarRow value={point.averageRating} />
+              <span
+                style={{
+                  fontSize: 11.5,
+                  color: '#7a6248',
+                  fontFamily: '"Geist Mono",ui-monospace,monospace',
+                }}
+              >
+                {point.ratingCount === 1 ? '1 avis' : `${point.ratingCount} avis`}
+              </span>
+            </div>
+            {date && (
+              <div
+                style={{
+                  marginTop: 3,
+                  fontSize: 11,
+                  color: '#9c7d5c',
+                  fontFamily: '"Geist Mono",ui-monospace,monospace',
+                }}
+              >
+                dernière · {date}
+              </div>
+            )}
+          </div>
+
+          {/* Close */}
           <button
             onClick={onClose}
-            aria-label="Close"
+            aria-label="Fermer"
             style={{
               flexShrink: 0,
-              background: '#ede5d8',
-              border: 'none',
-              borderRadius: '50%',
               width: 28,
               height: 28,
+              borderRadius: 14,
+              border: '1px solid #e4d4bb',
+              background: '#fffaf3',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: 14,
+              fontSize: 16,
+              lineHeight: 1,
               color: '#7a6248',
               marginTop: 2,
             }}
           >
-            ✕
+            ×
           </button>
         </div>
 
-        {/* Score block */}
-        <div style={{
-          background: '#f0e8da',
-          borderRadius: 12,
-          padding: '12px 14px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 14,
-        }}>
-          {/* Big number */}
-          <div style={{
-            flexShrink: 0,
-            width: 52,
-            height: 52,
-            borderRadius: 14,
-            background: color,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexDirection: 'column',
-          }}>
-            <span style={{ color: '#fff', fontWeight: 800, fontSize: 20, lineHeight: 1 }}>
-              {point.averageRating.toFixed(1)}
-            </span>
-            <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 10, lineHeight: 1.2 }}>/ 5</span>
-          </div>
-
-          <div>
-            <StarDisplay value={point.averageRating} />
-            <p style={{ margin: '4px 0 0', fontSize: 12, color: '#7a6248' }}>
-              {point.averageRating >= 4
-                ? 'Excellent'
-                : point.averageRating >= 3
-                  ? 'Good'
-                  : point.averageRating >= 2
-                    ? 'Average'
-                    : 'Below average'}
-            </p>
-          </div>
+        {/* Action buttons */}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            onClick={() =>
+              router.push(`/place/${encodeURIComponent(point.placeId ?? point.id)}`)
+            }
+            style={{
+              flex: 1,
+              height: 34,
+              borderRadius: 9,
+              background: 'transparent',
+              border: '1.5px solid #e4d4bb',
+              fontFamily: 'inherit',
+              fontSize: 12.5,
+              fontWeight: 500,
+              color: '#231608',
+              cursor: 'pointer',
+            }}
+          >
+            Voir les avis
+          </button>
+          <button
+            onClick={() =>
+              router.push(
+                `/rate${point.placeId ? `?placeId=${encodeURIComponent(point.placeId)}` : ''}`,
+              )
+            }
+            style={{
+              flex: 1,
+              height: 34,
+              borderRadius: 9,
+              background: '#130b02',
+              border: 'none',
+              fontFamily: 'inherit',
+              fontSize: 12.5,
+              fontWeight: 600,
+              color: '#fdecc5',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(15,23,42,0.20)',
+            }}
+          >
+            + Noter
+          </button>
         </div>
-
-        {/* Category breakdown */}
-        {point.categoryAverages && (() => {
-          const cats: Array<{ label: string; value: number | null; }> = [
-            { label: 'Goût', value: point.categoryAverages!.taste },
-            { label: 'Mousse', value: point.categoryAverages!.foam },
-            { label: 'Température', value: point.categoryAverages!.temperature },
-            { label: 'Présentation', value: point.categoryAverages!.presentation },
-            { label: 'Qualité/prix', value: point.categoryAverages!.valueForMoney },
-          ].filter((c) => c.value != null);
-          if (cats.length === 0) return null;
-          return (
-            <div style={{ marginTop: 10, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 12px' }}>
-              {cats.map(({ label, value }) => (
-                <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
-                  <span style={{ fontSize: 11, color: '#7a6248', whiteSpace: 'nowrap' }}>{label}</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <div style={{
-                      width: 28,
-                      height: 18,
-                      borderRadius: 5,
-                      background: ratingColor(value!),
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}>
-                      <span style={{ color: '#fff', fontSize: 10, fontWeight: 700 }}>{value!.toFixed(1)}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          );
-        })()}
       </div>
     </div>
   );
