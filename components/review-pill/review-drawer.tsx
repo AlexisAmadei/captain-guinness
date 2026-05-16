@@ -7,7 +7,7 @@ import { FOCUS_MAP_POINT_EVENT, FocusMapPointDetail } from "@/lib/map/events";
 export default function ReviewDrawer({
   isOpen,
   setIsOpen,
-  reviews,
+  reviews = [],
   loading,
   error,
   scope,
