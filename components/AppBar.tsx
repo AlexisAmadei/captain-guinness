@@ -4,6 +4,7 @@ import { Box, Button, Flex, Icon, Menu, Portal, Text } from "@chakra-ui/react";
 import Link from "next/link";
 import { BiMenu } from "react-icons/bi";
 import { logout } from "@/app/auth/login/actions";
+import { useRouter } from "next/navigation";
 
 function CaptainLogo({ size = 28 }: { size?: number }) {
   return (
@@ -44,6 +45,12 @@ function CaptainLogo({ size = 28 }: { size?: number }) {
 }
 
 export function AppBar() {
+  const router  = useRouter();
+
+  const navigateToHome = () => {
+    router.push("/");
+  };
+
   const handleLogout = async () => {
     await logout();
   };
@@ -64,6 +71,8 @@ export function AppBar() {
         h="16"
         px={{ base: 4, md: 6 }}
         gap={2.5}
+        onClick={navigateToHome}
+        cursor="pointer"
       >
         <CaptainLogo size={28} />
         <Text fontSize="2xl" fontWeight="semibold" color="var(--theme-soil)">

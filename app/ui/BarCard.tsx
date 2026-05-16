@@ -50,7 +50,7 @@ export function BarCard({ point, onClose }: BarCardProps) {
         bottom: 'calc(4rem + env(safe-area-inset-bottom) + 0.75rem)',
         left: '50%',
         transform: 'translateX(-50%)',
-        zIndex: 20,
+        zIndex: 999999,
         width: 'min(22rem, calc(100vw - 2rem))',
         background: '#fffaf3',
         borderRadius: 16,
