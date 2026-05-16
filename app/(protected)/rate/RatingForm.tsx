@@ -330,6 +330,16 @@ export function RatingForm({ place, onSuccess }: { place: Place; onSuccess: (dat
           onPhotoCapture={setPhotoFile}
           onPhotoClear={() => setPhotoFile(null)}
         />
+        <div
+          style={{ margin: "8px 16px 0", display: "flex", justifyContent: "flex-end" }}
+        >
+          <button type="button" onClick={() => setCriteria({ overall: criteria.overall, taste: 0, foam: 0, creamy: 0, temperature: 0, presentation: 0, valueForMoney: 0 })} style={{
+            background: "none", border: "none", color: T.muted, fontSize: 13, cursor: "pointer",
+          }}>
+            Réinitialiser
+          </button>
+        </div>
+
 
         {error && (
           <div style={{
