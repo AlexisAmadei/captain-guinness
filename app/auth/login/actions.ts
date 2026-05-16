@@ -64,31 +64,6 @@ export async function loginWithGoogle(formData: FormData) {
   redirect(data.url);
 }
 
-export async function loginWithMagicLink(formData: FormData) {
-  const supabase = await createClient();
-  const headerStore = await headers();
-
-  const email = String(formData.get("email") ?? "").trim();
-  const next = getSafeNextFromForm(formData, "/");
-
-  if (!email) {
-    redirect("/auth/login?error=Email%20is%20required");
-  }
-
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: {
-      emailRedirectTo: buildAuthCallbackUrl(headerStore, next),
-    },
-  });
-
-  if (error) {
-    redirect(`/auth/login?error=${encodeURIComponent(error.message)}`);
-  }
-
-  redirect("/auth/login?message=Magic%20link%20sent.%20Check%20your%20email.");
-}
-
 export async function logout() {
   const supabase = await createClient();
 
