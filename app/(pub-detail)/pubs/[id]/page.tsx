@@ -813,7 +813,6 @@ function CtaFooter({ mode }: { mode: "add" | "edit" }) {
   const isEdit = mode === "edit";
   const bg = isEdit ? "#006b3c" : "#130b02";
   const fg = isEdit ? "#fff" : "#fff7e6";
-  const label = isEdit ? "Modifier mon avis" : "Ajouter mon avis";
 
   return (
     <div
@@ -850,8 +849,8 @@ function CtaFooter({ mode }: { mode: "add" | "edit" }) {
           boxShadow: "0 4px 20px rgba(15,23,42,0.22)",
         }}
       >
-        {isEdit ? <LuPenLine size={16} /> : <LuPlus size={16} />}
-        {label}
+        <LuPlus size={16} />
+        Ajouter mon avis
       </button>
     </div>
   );

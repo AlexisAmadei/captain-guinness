@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { BarPicker } from "./BarPicker";
 import { RatingForm } from "./RatingForm";
+import { SuccessScreen } from "./SuccessScreen";
 
 export type RatingCriteria = {
   overall: number;
@@ -13,6 +14,8 @@ export type RatingCriteria = {
   presentation: number;
   valueForMoney: number;
 };
+
+export type SuccessData = { pub: string; avg: number; placeId: string };
 
 export type Place = {
   id: string;
@@ -71,9 +74,14 @@ export type RetrievedFeature = {
 
 export default function RatePage() {
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
+  const [successData, setSuccessData] = useState<SuccessData | null>(null);
+
+  if (successData) {
+    return <SuccessScreen pub={successData.pub} avg={successData.avg} placeId={successData.placeId} />;
+  }
 
   if (selectedPlace) {
-    return <RatingForm place={selectedPlace} />;
+    return <RatingForm place={selectedPlace} onSuccess={setSuccessData} />;
   }
 
   return <BarPicker onSelect={setSelectedPlace} />;

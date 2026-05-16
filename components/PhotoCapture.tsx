@@ -95,7 +95,6 @@ export function PhotoCapture({ onPhotoCapture, onClear }: PhotoCaptureProps) {
       ) : (
         <Button
           w="100%"
-          h={{ base: "180px", md: "220px" }}
           variant="outline"
           borderColor="app.border"
           bg="app.surfaceSolid"
@@ -105,11 +104,6 @@ export function PhotoCapture({ onPhotoCapture, onClear }: PhotoCaptureProps) {
           gap={3}
           borderRadius="lg"
           shadow="sm"
-          _hover={{
-            transform: "translateY(-1px)",
-            shadow: "soft",
-            borderColor: "app.accent",
-          }}
         >
           <Icon fontSize="3xl" color="app.accent">
             <BiCamera />
