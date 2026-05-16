@@ -1,20 +1,10 @@
 "use client";
 
-import {
-  Badge,
-  Box,
-  Button,
-  Dialog,
-  HStack,
-  Separator,
-  Skeleton,
-  Stack,
-  Text,
-} from "@chakra-ui/react";
-import { FOCUS_MAP_POINT_EVENT, type CategoryAverages, type FocusMapPointDetail } from "@/lib/map/events";
-import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { LuArrowUpRight, LuCrosshair, LuPlus, LuStar, LuTrash2, LuX } from "react-icons/lu";
+import { useRouter } from "next/navigation";
+import { Drawer } from "vaul";
+import { FOCUS_MAP_POINT_EVENT, type CategoryAverages, type FocusMapPointDetail } from "@/lib/map/events";
+import { VisuallyHidden } from "@chakra-ui/react";
 
 type ReviewPoint = {
   id: string;
@@ -33,26 +23,17 @@ type ReviewsMapResponse = {
   error?: string;
 };
 
-function ratingColor(value: number): string {
-  if (value >= 4) return "green.500";
-  if (value >= 3) return "yellow.500";
-  if (value >= 2) return "orange.400";
-  return "red.500";
-}
+type Scope = "all" | "mine";
 
-function ratingBg(value: number): string {
-  if (value >= 4) return "green.50";
-  if (value >= 3) return "yellow.50";
-  if (value >= 2) return "orange.50";
-  return "red.50";
-}
-
-function formatRating(value: number) {
-  return value.toFixed(1);
+function tierGrad(avg: number): string {
+  if (avg >= 4.0) return "linear-gradient(135deg,#16a34a,#0f766e)";
+  if (avg >= 3.0) return "linear-gradient(135deg,#a16207,#c2410c)";
+  if (avg >= 2.0) return "linear-gradient(135deg,#c2410c,#dc2626)";
+  return "linear-gradient(135deg,#dc2626,#db2777)";
 }
 
 function formatCount(count: number) {
-  return count === 1 ? "1 note" : `${count} notes`;
+  return count === 1 ? "1 avis" : `${count} avis`;
 }
 
 function formatLastRatedAt(value: string | null) {
@@ -66,34 +47,65 @@ function StarRow({ value }: { value: number }) {
   const full = Math.floor(value);
   const half = value - full >= 0.25 && value - full < 0.75;
   return (
-    <HStack gap="0.5" display="inline-flex">
+    <span style={{ display: "inline-flex", gap: 1.5, fontSize: 10 }}>
       {Array.from({ length: 5 }, (_, i) => {
         const pos = i + 1;
         const filled = pos <= full || (pos === full + 1 && half);
         return (
-          <Box
-            key={i}
-            as="span"
-            color={filled ? "yellow.400" : "gray.200"}
-            fontSize="11px"
-            lineHeight="1"
-          >
+          <span key={i} style={{ color: filled ? "#d4880e" : "#c8c0b0", lineHeight: 1 }}>
             ★
-          </Box>
+          </span>
         );
       })}
-    </HStack>
+    </span>
   );
+}
+
+function ScoreBadge({ avg, size = 36 }: { avg: number; size?: number }) {
+  return (
+    <div
+      style={{
+        width: size,
+        height: size,
+        borderRadius: size * 0.33,
+        background: tierGrad(avg),
+        color: "#fff",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily: '"Geist Mono",ui-monospace,monospace',
+        fontSize: size * 0.32,
+        fontWeight: 700,
+        letterSpacing: -0.3,
+        flexShrink: 0,
+        boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+      }}
+    >
+      {avg.toFixed(1)}
+    </div>
+  );
+}
+
+async function loadReviews(scope: Scope, signal: AbortSignal): Promise<ReviewPoint[]> {
+  const response = await fetch(`/api/ratings/map?scope=${scope}`, { signal });
+  const payload: ReviewsMapResponse = await response.json();
+  if (!response.ok) throw new Error(payload.error ?? "Impossible de charger les avis");
+  return (payload.points ?? []).slice().sort((a, b) => {
+    if (b.averageRating !== a.averageRating) return b.averageRating - a.averageRating;
+    if (b.ratingCount !== a.ratingCount) return b.ratingCount - a.ratingCount;
+    return a.name.localeCompare(b.name);
+  });
 }
 
 export function ReviewPill() {
   const router = useRouter();
-  const [reviews, setReviews] = useState<ReviewPoint[]>([]);
+  const [allReviews, setAllReviews] = useState<ReviewPoint[]>([]);
+  const [myReviews, setMyReviews] = useState<ReviewPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [entered, setEntered] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [scope, setScope] = useState<Scope>("all");
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => setEntered(true));
@@ -102,63 +114,51 @@ export function ReviewPill() {
 
   useEffect(() => {
     const controller = new AbortController();
+    setLoading(true);
+    setError(null);
 
-    async function loadReviews() {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const response = await fetch("/api/ratings/map?scope=all", {
-          signal: controller.signal,
-        });
-        const payload: ReviewsMapResponse = await response.json();
-
-        if (!response.ok) {
-          throw new Error(payload.error || "Impossible de charger les avis");
-        }
-
-        const nextReviews = (payload.points ?? []).slice().sort((a, b) => {
-          if (b.averageRating !== a.averageRating) return b.averageRating - a.averageRating;
-          if (b.ratingCount !== a.ratingCount) return b.ratingCount - a.ratingCount;
-          return a.name.localeCompare(b.name);
-        });
-
-        setReviews(nextReviews);
-      } catch (loadError) {
+    Promise.all([
+      loadReviews("all", controller.signal),
+      loadReviews("mine", controller.signal),
+    ])
+      .then(([all, mine]) => {
         if (controller.signal.aborted) return;
-        setError(loadError instanceof Error ? loadError.message : "Erreur inconnue");
-        setReviews([]);
-      } finally {
+        setAllReviews(all);
+        setMyReviews(mine);
+      })
+      .catch((err) => {
+        if (controller.signal.aborted) return;
+        setError(err instanceof Error ? err.message : "Erreur inconnue");
+      })
+      .finally(() => {
         if (!controller.signal.aborted) setLoading(false);
-      }
-    }
+      });
 
-    loadReviews();
     return () => controller.abort();
   }, []);
 
+  const reviews = scope === "mine" ? myReviews : allReviews;
+
   const totalRatings = useMemo(
-    () => reviews.reduce((sum, r) => sum + r.ratingCount, 0),
-    [reviews],
+    () => allReviews.reduce((sum, r) => sum + r.ratingCount, 0),
+    [allReviews],
   );
 
   const overallAverage = useMemo(() => {
-    if (reviews.length === 0) return null;
-    const weighted = reviews.reduce((sum, r) => sum + r.averageRating * r.ratingCount, 0);
+    if (allReviews.length === 0) return null;
+    const weighted = allReviews.reduce((sum, r) => sum + r.averageRating * r.ratingCount, 0);
     return weighted / totalRatings;
-  }, [reviews, totalRatings]);
+  }, [allReviews, totalRatings]);
 
-  const handleDelete = async (review: ReviewPoint) => {
-    setDeletingId(review.id);
-    try {
-      const res = await fetch(`/api/ratings/place/${encodeURIComponent(review.id)}`, { method: "DELETE" });
-      if (res.ok) {
-        setReviews((prev) => prev.filter((r) => r.id !== review.id));
-      }
-    } finally {
-      setDeletingId(null);
-    }
-  };
+  const myTotalRatings = useMemo(
+    () => myReviews.reduce((sum, r) => sum + r.ratingCount, 0),
+    [myReviews],
+  );
+
+  const subCount =
+    scope === "mine"
+      ? `${myReviews.length} lieu${myReviews.length !== 1 ? "x" : ""} · ${myTotalRatings} notes`
+      : `${allReviews.length} lieu${allReviews.length !== 1 ? "x" : ""} · ${totalRatings} notes`;
 
   const focusPointOnMap = (review: ReviewPoint) => {
     const detail: FocusMapPointDetail = {
@@ -175,252 +175,464 @@ export function ReviewPill() {
 
   return (
     <>
-      {/* ── Floating pill buttons ────────────────────────────────────────────── */}
-      <HStack
-        position="fixed"
-        bottom={{ base: 4, md: 5 }}
-        left={{ base: 3, md: 5 }}
-        zIndex={30}
-        gap={2}
-        transform={entered ? "translateY(0)" : "translateY(24px)"}
-        opacity={entered ? 1 : 0}
-        transition="transform 400ms cubic-bezier(0.16,1,0.3,1), opacity 260ms ease"
+      {/* ── Stacked FAB ─────────────────────────────────────────────────── */}
+      <div
+        style={{
+          position: "fixed",
+          bottom: "calc(env(safe-area-inset-bottom, 0px) + 22px)",
+          left: 16,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-start",
+          gap: 10,
+          zIndex: 30,
+          transform: entered ? "translateY(0)" : "translateY(24px)",
+          opacity: entered ? 1 : 0,
+          transition: "transform 400ms cubic-bezier(0.16,1,0.3,1), opacity 260ms ease",
+        }}
       >
-        {/* Add rating */}
-        <Button
-          borderRadius="full"
-          boxSize="11"
-          p="0"
-          bg="brand.900"
-          boxShadow="0 4px 20px rgba(15,23,42,0.20)"
-          aria-label="Ajouter un avis"
+        {/* + circle */}
+        <button
           onClick={() => router.push("/rate")}
+          aria-label="Ajouter un avis"
+          style={{
+            width: 56,
+            height: 56,
+            borderRadius: 28,
+            background: "#130b02",
+            border: "none",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow:
+              "0 4px 24px rgba(15,23,42,0.28), inset 0 1px 0 rgba(255,255,255,0.07)",
+            flexShrink: 0,
+          }}
         >
-          <LuPlus size={18} />
-        </Button>
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#fdecc5"
+            strokeWidth="2.6"
+            strokeLinecap="round"
+          >
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+        </button>
 
-        {/* Avis pill */}
-        <Button
-          borderRadius="full"
-          px="4"
-          h="11"
-          bg="brand.900"
-          variant="solid"
-          boxShadow="0 4px 20px rgba(15,23,42,0.20)"
+        {/* Avis glass pill */}
+        <button
           onClick={() => setIsOpen(true)}
-          gap={2}
+          style={{
+            height: 44,
+            padding: "0 14px",
+            borderRadius: 22,
+            background: "rgba(255,255,255,0.76)",
+            backdropFilter: "blur(22px) saturate(150%)",
+            WebkitBackdropFilter: "blur(22px) saturate(150%)",
+            border: "1px solid #e4d4bb",
+            boxShadow: "0 4px 18px rgba(61,36,9,0.14)",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: 9,
+            fontFamily: "inherit",
+          }}
         >
-          <LuStar size={14} />
-          <Text fontWeight="semibold" fontSize="sm">Avis</Text>
+          <span style={{ fontSize: 14, fontWeight: 600, color: "#231608" }}>Avis</span>
           {!loading && (
-            <Badge
-              variant="solid"
-              bg="rgba(255,255,255,0.22)"
-              color="white"
-              borderRadius="full"
-              px="2"
-              fontSize="xs"
-              fontWeight="semibold"
+            <span
+              style={{
+                height: 20,
+                padding: "0 7px",
+                borderRadius: 10,
+                background: "#130b02",
+                color: "#fdecc5",
+                fontSize: 11,
+                fontWeight: 700,
+                fontFamily: '"Geist Mono",ui-monospace,monospace',
+                display: "flex",
+                alignItems: "center",
+              }}
             >
-              {reviews.length}
-            </Badge>
+              {totalRatings}
+            </span>
           )}
           {overallAverage !== null && (
-            <HStack gap="1" borderLeftWidth="1px" borderColor="rgba(255,255,255,0.3)" pl="2">
-              <Text fontSize="sm" fontWeight="bold">{formatRating(overallAverage)}</Text>
-              <Text fontSize="xs" opacity={0.75}>/ 5</Text>
-            </HStack>
+            <span style={{ fontSize: 12.5, color: "#c07800", fontWeight: 700 }}>
+              ★ {overallAverage.toFixed(1)}
+            </span>
           )}
-        </Button>
-      </HStack>
+        </button>
+      </div>
 
-      {/* ── Dialog ──────────────────────────────────────────────────────────── */}
-      <Dialog.Root
-        open={isOpen}
-        onOpenChange={({ open }) => setIsOpen(open)}
-        size="md"
-        scrollBehavior="inside"
-        id="all-reviews-dialog"
-      >
-        <Dialog.Backdrop />
-        <Dialog.Positioner>
-          <Dialog.Content borderRadius="2xl" overflow="hidden" mx={2}>
-            {/* Gradient accent */}
-            <Box h="1" bgGradient="to-r" gradientFrom="brand.600" gradientTo="brand.400" flexShrink={0} />
+      {/* ── Vaul bottom sheet ───────────────────────────────────────────── */}
+      <Drawer.Root open={isOpen} onOpenChange={setIsOpen} shouldScaleBackground={false}>
+        <Drawer.Portal>
+          <Drawer.Overlay
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(0,0,0,0.30)",
+              zIndex: 40,
+            }}
+          />
+          <Drawer.Content
+            style={{
+              position: "fixed",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              zIndex: 50,
+              background: "#fffaf3",
+              borderTopLeftRadius: 28,
+              borderTopRightRadius: 28,
+              boxShadow: "0 -16px 50px rgba(15,23,42,0.22)",
+              display: "flex",
+              flexDirection: "column",
+              maxHeight: "85dvh",
+              outline: "none",
+            }}
+          >
+            <VisuallyHidden>
+              <Drawer.Title>Liste des avis</Drawer.Title>
+            </VisuallyHidden>
+            {/* Handle */}
+            <div
+              style={{
+                paddingTop: 12,
+                display: "flex",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              <Drawer.Handle
+                style={{
+                  width: 40,
+                  height: 5,
+                  borderRadius: 3,
+                  background: "#c9a87a",
+                  opacity: 0.65,
+                  cursor: "grab",
+                }}
+              />
+            </div>
 
-            <Dialog.Header px="5" pt="4" pb="0" flexShrink={0}>
-              {/* Overall stats */}
-              {overallAverage !== null && !loading && (
-                <HStack
-                  mt="6"
-                  p="3"
-                  bg="bg.subtle"
-                  borderRadius="xl"
-                  borderWidth="1px"
-                  borderColor="border"
-                  gap="4"
-                  w={'100%'}
+            {/* Header */}
+            <div
+              style={{
+                padding: "10px 20px 0",
+                flexShrink: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    fontWeight: 700,
+                    fontSize: 22,
+                    letterSpacing: -0.5,
+                    color: "#231608",
+                  }}
                 >
-                  <Stack gap="0" flex="1" align="center">
-                    <Text fontSize="2xl" fontWeight="bold" color="fg" >
-                      {totalRatings}
-                    </Text>
-                    <Text fontSize="xs" textAlign={'center'} color="fg.muted">Notes au total</Text>
-                  </Stack>
-                  <Separator orientation="vertical" h="12" />
-                  <Stack gap="0" flex="1" align="center">
-                    <Text fontSize="2xl" fontWeight="bold" color="fg">
-                      {reviews.length}
-                    </Text>
-                    <Text fontSize="xs" color="fg.muted" mt="0.5">Lieux notés</Text>
-                  </Stack>
-
-                  <Dialog.CloseTrigger asChild>
-                    <Button size="md" variant="ghost" colorPalette="gray" borderRadius="full" boxSize="7" m="1" aria-label="Fermer">
-                      <LuX size={13} />
-                    </Button>
-                  </Dialog.CloseTrigger>
-                </HStack>
-              )}
-            </Dialog.Header>
-
-            <Dialog.Body px="5" py="3">
-              <Stack gap="0">
-                {loading ? (
-                  <Stack gap="2">
-                    {[0, 1, 2].map((i) => (
-                      <Skeleton key={i} h="20" borderRadius="xl" />
-                    ))}
-                  </Stack>
-                ) : error ? (
-                  <Text fontSize="sm" color="red.500" py="2">{error}</Text>
-                ) : reviews.length === 0 ? (
-                  <Text fontSize="sm" color="fg.muted" py="6" textAlign="center">
-                    Aucun avis pour le moment.
-                  </Text>
-                ) : (
-                  reviews.map((review, index) => {
-                    const date = formatLastRatedAt(review.lastRatedAt);
-                    return (
-                      <Box
-                        key={review.id}
-                        borderBottomWidth={index < reviews.length - 1 ? "1px" : "0"}
-                        borderColor="border"
-                        py="3"
-                      >
-                        <HStack align="flex-start" gap="3">
-                          {/* Rank */}
-                          <Text
-                            flexShrink={0}
-                            w="5"
-                            fontSize="xs"
-                            fontWeight="semibold"
-                            color={index === 0 ? "app.accent" : "fg.muted"}
-                            textAlign="center"
-                            pt="0.5"
-                          >
-                            {index + 1}
-                          </Text>
-
-                          {/* Info */}
-                          <Stack gap="1" minW={0} flex="1">
-                            <Text
-                              fontWeight="medium"
-                              fontSize="sm"
-                              whiteSpace="nowrap"
-                              overflow="hidden"
-                              textOverflow="ellipsis"
-                            >
-                              {review.name}
-                            </Text>
-                            <HStack gap="1.5">
-                              <StarRow value={review.averageRating} />
-                              <Text fontSize="xs" color="fg.muted">
-                                {formatCount(review.ratingCount)}
-                                {date ? ` · ${date}` : ""}
-                              </Text>
-                            </HStack>
-
-                            {/* CTAs */}
-                            <HStack gap="2" mt="0.5" flexWrap="wrap">
-                              <Button
-                                size="xs"
-                                variant="outline"
-                                borderRadius="full"
-                                gap="1"
-                                onClick={() => router.push(`/place/${encodeURIComponent(review.placeId ?? review.id)}`)}
-                              >
-                                <LuArrowUpRight size={11} />
-                                Voir tous les avis
-                              </Button>
-                              <Button
-                                size="xs"
-                                variant="solid"
-                                bg="brand.900"
-                                borderRadius="full"
-                                gap="1"
-                                onClick={() => { focusPointOnMap(review); setIsOpen(false); }}
-                              >
-                                <LuCrosshair size={11} />
-                                Localiser
-                              </Button>
-                            </HStack>
-                          </Stack>
-
-                          {/* Score badge + delete */}
-                          <Stack gap="1" align="flex-end" flexShrink={0}>
-                            <Button
-                              size="xs"
-                              variant="ghost"
-                              colorPalette="red"
-                              borderRadius="full"
-                              p="1"
-                              minW="0"
-                              h="auto"
-                              aria-label="Supprimer cet avis"
-                              loading={deletingId === review.id}
-                              onClick={() => handleDelete(review)}
-                            >
-                              <LuTrash2 size={13} />
-                            </Button>
-                            <Badge
-                              borderRadius="lg"
-                              px="2"
-                              py="1"
-                              bg={ratingBg(review.averageRating)}
-                              color={ratingColor(review.averageRating)}
-                              fontSize="sm"
-                              fontWeight="bold"
-                            >
-                              {formatRating(review.averageRating)}
-                            </Badge>
-                          </Stack>
-                        </HStack>
-                      </Box>
-                    );
-                  })
-                )}
-              </Stack>
-            </Dialog.Body>
-
-            <Dialog.Footer px="5" py="3" borderTopWidth="1px" borderColor="border" flexShrink={0}>
-              <Text fontSize="xs" color="fg.muted" flex="1">Trié par note moyenne</Text>
-              <Button
-                size="xs"
-                variant="ghost"
-                bg="stout.400"
-                borderRadius="full"
-                gap="1"
-                color="white"
-                onClick={() => router.push("/rate")}
+                  Avis
+                </div>
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: "#7a6248",
+                    marginTop: 2,
+                    fontFamily: '"Geist Mono",ui-monospace,monospace',
+                  }}
+                >
+                  {subCount}
+                </div>
+              </div>
+              <button
+                onClick={() => setIsOpen(false)}
+                aria-label="Fermer"
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 16,
+                  border: "1px solid #e4d4bb",
+                  background: "#fffaf3",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 18,
+                  lineHeight: 1,
+                  color: "#7a6248",
+                  cursor: "pointer",
+                }}
               >
-                <LuPlus size={11} />
+                ×
+              </button>
+            </div>
+
+            {/* Scope toggle */}
+            <div style={{ padding: "12px 20px 8px", flexShrink: 0 }}>
+              <div
+                style={{
+                  display: "flex",
+                  padding: 3,
+                  background: "#f6f1e6",
+                  border: "1px solid #e4d4bb",
+                  borderRadius: 999,
+                }}
+              >
+                {(["mine", "all"] as Scope[]).map((v) => (
+                  <button
+                    key={v}
+                    onClick={() => setScope(v)}
+                    style={{
+                      flex: 1,
+                      padding: "9px 0",
+                      textAlign: "center",
+                      borderRadius: 999,
+                      fontSize: 13,
+                      fontWeight: v === scope ? 600 : 400,
+                      background: v === scope ? "#130b02" : "transparent",
+                      color: v === scope ? "#fff7e6" : "#7a6248",
+                      boxShadow:
+                        v === scope ? "0 2px 8px rgba(15,23,42,0.18)" : "none",
+                      border: "none",
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                      transition: "background 200ms, color 200ms",
+                    }}
+                  >
+                    {v === "mine" ? "Mes notes" : "Toutes les notes"}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* List */}
+            <div style={{ flex: 1, overflowY: "auto", padding: "0 20px" }}>
+              {loading ? (
+                <div
+                  style={{
+                    padding: "24px 0",
+                    color: "#7a6248",
+                    fontSize: 13,
+                    textAlign: "center",
+                  }}
+                >
+                  Chargement…
+                </div>
+              ) : error ? (
+                <div style={{ padding: "16px 0", color: "#c23b39", fontSize: 13 }}>
+                  {error}
+                </div>
+              ) : reviews.length === 0 ? (
+                <div
+                  style={{
+                    padding: "40px 0",
+                    color: "#7a6248",
+                    fontSize: 13,
+                    textAlign: "center",
+                  }}
+                >
+                  {scope === "mine"
+                    ? "Tu n'as pas encore noté de pubs."
+                    : "Aucun avis pour le moment."}
+                </div>
+              ) : (
+                reviews.map((review, index) => {
+                  const date = formatLastRatedAt(review.lastRatedAt);
+                  return (
+                    <div
+                      key={review.id}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 11,
+                        padding: "11px 0",
+                        borderBottom:
+                          index < reviews.length - 1
+                            ? "1px solid #e4d4bb"
+                            : "none",
+                      }}
+                    >
+                      <span
+                        style={{
+                          width: 20,
+                          textAlign: "right",
+                          fontFamily: '"Geist Mono",ui-monospace,monospace',
+                          fontSize: 11,
+                          color: "#7a6248",
+                          flexShrink: 0,
+                        }}
+                      >
+                        #{index + 1}
+                      </span>
+
+                      <ScoreBadge avg={review.averageRating} />
+
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div
+                          style={{
+                            fontWeight: 600,
+                            fontSize: 14,
+                            color: "#231608",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {review.name}
+                        </div>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 6,
+                            marginTop: 3,
+                          }}
+                        >
+                          <StarRow value={review.averageRating} />
+                          <span
+                            style={{
+                              fontSize: 11,
+                              color: "#7a6248",
+                              fontFamily: '"Geist Mono",ui-monospace,monospace',
+                            }}
+                          >
+                            {formatCount(review.ratingCount)}
+                            {date ? ` · ${date}` : ""}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                        {/* Locate on map */}
+                        <button
+                          onClick={() => {
+                            focusPointOnMap(review);
+                            setIsOpen(false);
+                          }}
+                          aria-label="Localiser sur la carte"
+                          style={{
+                            width: 30,
+                            height: 30,
+                            borderRadius: 8,
+                            border: "1px solid #e4d4bb",
+                            background: "#fffaf3",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="#7a6248"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <circle cx="12" cy="12" r="3" />
+                            <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+                          </svg>
+                        </button>
+                        {/* See all reviews */}
+                        <button
+                          onClick={() =>
+                            router.push(
+                              `/place/${encodeURIComponent(review.placeId ?? review.id)}`,
+                            )
+                          }
+                          aria-label="Voir les avis"
+                          style={{
+                            width: 30,
+                            height: 30,
+                            borderRadius: 8,
+                            border: "1px solid #e4d4bb",
+                            background: "#fffaf3",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="#7a6248"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M9 18l6-6-6-6" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Footer CTA */}
+            <div
+              style={{
+                padding:
+                  "12px 20px calc(env(safe-area-inset-bottom, 0px) + 12px)",
+                borderTop: "1px solid #e4d4bb",
+                flexShrink: 0,
+              }}
+            >
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  router.push("/rate");
+                }}
+                style={{
+                  width: "100%",
+                  height: 48,
+                  borderRadius: 12,
+                  background: "#130b02",
+                  border: "none",
+                  fontFamily: "inherit",
+                  fontSize: 15,
+                  fontWeight: 600,
+                  color: "#fff7e6",
+                  cursor: "pointer",
+                  boxShadow: "0 4px 16px rgba(15,23,42,0.18)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                }}
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#fdecc5"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                >
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
                 Ajouter un avis
-              </Button>
-            </Dialog.Footer>
-          </Dialog.Content>
-        </Dialog.Positioner>
-      </Dialog.Root>
+              </button>
+            </div>
+          </Drawer.Content>
+        </Drawer.Portal>
+      </Drawer.Root>
     </>
   );
 }
