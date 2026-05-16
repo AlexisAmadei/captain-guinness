@@ -4,25 +4,9 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { buildAuthCallbackUrl } from "@/lib/auth/redirect";
 
 import type { ProfileActionState } from "./types";
-
-function getEmailRedirectTo(headerStore: Headers) {
-  const envSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
-
-  if (envSiteUrl) {
-    return `${envSiteUrl}/auth/callback?next=/profile`;
-  }
-
-  const host = headerStore.get("x-forwarded-host") ?? headerStore.get("host");
-  const protocol = headerStore.get("x-forwarded-proto") ?? "http";
-
-  if (!host) {
-    return "http://localhost:3000/auth/callback?next=/profile";
-  }
-
-  return `${protocol}://${host}/auth/callback?next=/profile`;
-}
 
 export async function updateDisplayName(
   _previousState: ProfileActionState,
@@ -92,7 +76,7 @@ export async function updateEmail(
   const { error } = await supabase.auth.updateUser(
     { email },
     {
-      emailRedirectTo: getEmailRedirectTo(headerStore),
+      emailRedirectTo: buildAuthCallbackUrl(headerStore, "/profile"),
     },
   );
 

@@ -34,5 +34,5 @@ export async function register(formData: FormData) {
     redirect(`/auth/register?error=${encodeURIComponent(error.message)}`);
   }
 
-  redirect("/auth/login?registered=1");
+  redirect("/auth/login?message=Inscription%20r%C3%A9ussie%20!%20Tu%20peux%20maintenant%20te%20connecter.");
 }
