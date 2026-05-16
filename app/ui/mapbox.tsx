@@ -5,6 +5,7 @@ import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { FOCUS_MAP_POINT_EVENT, type FocusMapPointDetail, type CategoryAverages } from '@/lib/map/events';
 import { BarCard } from './BarCard';
+import { Box } from '@chakra-ui/react';
 
 type MapPoint = {
   id: string;
@@ -55,6 +56,7 @@ export function ratingColor(rating: number): string {
 export default function Map() {
   const mapRef = useRef<mapboxgl.Map | null>(null)
   const mapContainerRef = useRef<HTMLDivElement | null>(null)
+  const geolocateRef = useRef<mapboxgl.GeolocateControl | null>(null)
   const accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? process.env.NEXT_PUBLIC_MAPBOX_TOKEN
 
   const [activePoint, setActivePoint] = useState<FocusMapPointDetail | null>(null)
@@ -70,6 +72,7 @@ export default function Map() {
       style: 'mapbox://styles/mapbox/streets-v12',
       center: [2.34462, 48.85944],
       zoom: 12.28,
+      attributionControl: false,
     });
     mapRef.current = map
 
@@ -78,6 +81,7 @@ export default function Map() {
       trackUserLocation: true,
     })
     map.addControl(geolocate)
+    geolocateRef.current = geolocate
 
     // Centre on user once the map and geolocation are both ready
     map.once('load', () => {
@@ -212,6 +216,39 @@ export default function Map() {
       `}</style>
 
       <div id='map-container' ref={mapContainerRef} style={{ width: '100%', height: '100%' }} />
+
+      <Box
+        position="fixed"
+        bottom={{ base: 4, md: 5 }}
+        right={{ base: 3, md: 5 }}
+      >
+        <button
+          onClick={() => geolocateRef.current?.trigger()}
+          style={{
+            // position: 'absolute',
+            // bottom: '18px',
+            // right: '10px',
+            zIndex: 10,
+            width: '36px',
+            height: '36px',
+            borderRadius: '50%',
+            border: 'none',
+            background: 'white',
+            boxShadow: '0 0 0 2px rgba(0,0,0,.1)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          title="Center on my position"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+            <circle cx="12" cy="12" r="8" />
+          </svg>
+        </button>
+      </Box>
 
       {activePoint && (
         <BarCard point={activePoint} onClose={() => setActivePoint(null)} />
