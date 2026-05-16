@@ -548,7 +548,7 @@ export function ReviewPill() {
                         <button
                           onClick={() =>
                             router.push(
-                              `/place/${encodeURIComponent(review.placeId ?? review.id)}`,
+                              `/pubs/${encodeURIComponent(review.placeId ?? review.id)}?name=${encodeURIComponent(review.name)}`,
                             )
                           }
                           aria-label="Voir les avis"

@@ -155,7 +155,7 @@ export function BarCard({ point, onClose }: BarCardProps) {
         <div style={{ display: 'flex', gap: 8 }}>
           <button
             onClick={() =>
-              router.push(`/place/${encodeURIComponent(point.placeId ?? point.id)}`)
+              router.push(`/pubs/${encodeURIComponent(point.placeId ?? point.id)}?name=${encodeURIComponent(point.name)}`)
             }
             style={{
               flex: 1,
