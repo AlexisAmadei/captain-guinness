@@ -2,15 +2,18 @@
 
 import { useState } from "react";
 
-const fieldStyle = {
-  width: "100%", height: 52, borderRadius: 12,
-  background: "#fffaf3",
-  border: "1.5px solid #e4d4bb",
-  padding: "0 16px",
-  fontSize: 16, color: "#231608", fontWeight: 500,
-  fontFamily: "inherit",
-  outline: "none", boxSizing: "border-box" as const,
-};
+function fieldStyle(focused: boolean, extraPadding = false) {
+  return {
+    width: "100%", height: 52, borderRadius: 12,
+    background: "#fffaf3",
+    border: focused ? "1.5px solid #006b3c" : "1.5px solid #e4d4bb",
+    boxShadow: focused ? "0 0 0 4px rgba(0,107,60,0.13)" : "none",
+    padding: extraPadding ? "0 48px 0 16px" : "0 16px",
+    fontSize: 16, color: "#231608", fontWeight: 500,
+    fontFamily: "inherit",
+    outline: "none", boxSizing: "border-box" as const,
+  };
+}
 
 const labelStyle = { fontSize: 13, fontWeight: 500, color: "#7a6248", marginBottom: 6, letterSpacing: -0.1, display: "block" } as const;
 
@@ -37,6 +40,9 @@ interface RegisterFormProps {
 export function RegisterForm({ safeNext, registerAction }: RegisterFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [nameFocused, setNameFocused] = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
 
   return (
     <>
@@ -50,9 +56,9 @@ export function RegisterForm({ safeNext, registerAction }: RegisterFormProps) {
             type="text"
             placeholder="Marie Lambert"
             required
-            style={fieldStyle}
-            onFocus={(e) => { e.target.style.border = "1.5px solid #006b3c"; e.target.style.boxShadow = "0 0 0 4px rgba(0,107,60,0.13)"; }}
-            onBlur={(e) => { e.target.style.border = "1.5px solid #e4d4bb"; e.target.style.boxShadow = "none"; }}
+            style={fieldStyle(nameFocused)}
+            onFocus={() => setNameFocused(true)}
+            onBlur={() => setNameFocused(false)}
           />
         </label>
 
@@ -63,9 +69,9 @@ export function RegisterForm({ safeNext, registerAction }: RegisterFormProps) {
             type="email"
             placeholder="email@exemple.com"
             required
-            style={fieldStyle}
-            onFocus={(e) => { e.target.style.border = "1.5px solid #006b3c"; e.target.style.boxShadow = "0 0 0 4px rgba(0,107,60,0.13)"; }}
-            onBlur={(e) => { e.target.style.border = "1.5px solid #e4d4bb"; e.target.style.boxShadow = "none"; }}
+            style={fieldStyle(emailFocused)}
+            onFocus={() => setEmailFocused(true)}
+            onBlur={() => setEmailFocused(false)}
           />
         </label>
 
@@ -78,9 +84,9 @@ export function RegisterForm({ safeNext, registerAction }: RegisterFormProps) {
               placeholder="8 caractères min."
               minLength={8}
               required
-              style={{ ...fieldStyle, padding: "0 48px 0 16px" }}
-              onFocus={(e) => { e.target.style.border = "1.5px solid #006b3c"; e.target.style.boxShadow = "0 0 0 4px rgba(0,107,60,0.13)"; }}
-              onBlur={(e) => { e.target.style.border = "1.5px solid #e4d4bb"; e.target.style.boxShadow = "none"; }}
+              style={fieldStyle(passwordFocused, true)}
+              onFocus={() => setPasswordFocused(true)}
+              onBlur={() => setPasswordFocused(false)}
             />
             <button
               type="button"

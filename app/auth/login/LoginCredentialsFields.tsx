@@ -3,9 +3,24 @@
 import NextLink from "next/link";
 import { useState } from "react";
 
+function inputStyle(focused: boolean, extraPadding = false) {
+  return {
+    width: "100%", height: 52, borderRadius: 12,
+    background: "#fffaf3",
+    border: focused ? "1.5px solid #006b3c" : "1.5px solid #e4d4bb",
+    boxShadow: focused ? "0 0 0 4px rgba(0,107,60,0.13)" : "none",
+    padding: extraPadding ? "0 48px 0 16px" : "0 16px",
+    fontSize: 16, color: "#231608", fontWeight: 500,
+    fontFamily: "inherit",
+    outline: "none", boxSizing: "border-box" as const,
+  };
+}
+
 export function LoginCredentialsFields() {
   const [email, setEmail] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
 
   return (
     <>
@@ -19,17 +34,9 @@ export function LoginCredentialsFields() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="email@exemple.com"
-          style={{
-            width: "100%", height: 52, borderRadius: 12,
-            background: "#fffaf3",
-            border: "1.5px solid #e4d4bb",
-            padding: "0 16px",
-            fontSize: 16, color: "#231608", fontWeight: 500,
-            fontFamily: "inherit",
-            outline: "none", boxSizing: "border-box",
-          }}
-          onFocus={(e) => { e.target.style.border = "1.5px solid #006b3c"; e.target.style.boxShadow = "0 0 0 4px rgba(0,107,60,0.13)"; }}
-          onBlur={(e) => { e.target.style.border = "1.5px solid #e4d4bb"; e.target.style.boxShadow = "none"; }}
+          style={inputStyle(emailFocused)}
+          onFocus={() => setEmailFocused(true)}
+          onBlur={() => setEmailFocused(false)}
         />
       </label>
 
@@ -48,17 +55,9 @@ export function LoginCredentialsFields() {
             name="password"
             type={showPassword ? "text" : "password"}
             placeholder="8 caractères min."
-            style={{
-              width: "100%", height: 52, borderRadius: 12,
-              background: "#fffaf3",
-              border: "1.5px solid #e4d4bb",
-              padding: "0 48px 0 16px",
-              fontSize: 16, color: "#231608", fontWeight: 500,
-              fontFamily: "inherit",
-              outline: "none", boxSizing: "border-box",
-            }}
-            onFocus={(e) => { e.target.style.border = "1.5px solid #006b3c"; e.target.style.boxShadow = "0 0 0 4px rgba(0,107,60,0.13)"; }}
-            onBlur={(e) => { e.target.style.border = "1.5px solid #e4d4bb"; e.target.style.boxShadow = "none"; }}
+            style={inputStyle(passwordFocused, true)}
+            onFocus={() => setPasswordFocused(true)}
+            onBlur={() => setPasswordFocused(false)}
           />
           <button
             type="button"

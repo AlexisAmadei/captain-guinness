@@ -20,15 +20,18 @@ function getStrength(pw: string): number {
 const STRENGTH_LABELS = ["Trop court", "Faible", "Correct", "Solide"];
 const STRENGTH_COLORS = ["#c23b39", "#facc15", "#facc15", "#006b3c"];
 
-const fieldStyle = {
-  width: "100%", height: 52, borderRadius: 12,
-  background: "#fffaf3",
-  border: "1.5px solid #e4d4bb",
-  padding: "0 48px 0 16px",
-  fontSize: 16, color: "#231608", fontWeight: 500,
-  fontFamily: "inherit",
-  outline: "none", boxSizing: "border-box" as const,
-};
+function fieldStyle(focused: boolean) {
+  return {
+    width: "100%", height: 52, borderRadius: 12,
+    background: "#fffaf3",
+    border: focused ? "1.5px solid #006b3c" : "1.5px solid #e4d4bb",
+    boxShadow: focused ? "0 0 0 4px rgba(0,107,60,0.13)" : "none",
+    padding: "0 48px 0 16px",
+    fontSize: 16, color: "#231608", fontWeight: 500,
+    fontFamily: "inherit",
+    outline: "none", boxSizing: "border-box" as const,
+  };
+}
 
 interface ResetPasswordFormProps {
   updatePasswordAction: (formData: FormData) => Promise<void>;
@@ -38,6 +41,8 @@ export function ResetPasswordForm({ updatePasswordAction }: ResetPasswordFormPro
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [confirmFocused, setConfirmFocused] = useState(false);
   const strength = getStrength(password);
 
   return (
@@ -56,9 +61,9 @@ export function ResetPasswordForm({ updatePasswordAction }: ResetPasswordFormPro
             placeholder="8 caractères min."
             minLength={8}
             required
-            style={fieldStyle}
-            onFocus={(e) => { e.target.style.border = "1.5px solid #006b3c"; e.target.style.boxShadow = "0 0 0 4px rgba(0,107,60,0.13)"; }}
-            onBlur={(e) => { e.target.style.border = "1.5px solid #e4d4bb"; e.target.style.boxShadow = "none"; }}
+            style={fieldStyle(passwordFocused)}
+            onFocus={() => setPasswordFocused(true)}
+            onBlur={() => setPasswordFocused(false)}
           />
           <button type="button" onClick={() => setShowPassword((v) => !v)} tabIndex={-1}
             style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex" }}>
@@ -100,9 +105,9 @@ export function ResetPasswordForm({ updatePasswordAction }: ResetPasswordFormPro
             placeholder="Répète le mot de passe"
             minLength={8}
             required
-            style={fieldStyle}
-            onFocus={(e) => { e.target.style.border = "1.5px solid #006b3c"; e.target.style.boxShadow = "0 0 0 4px rgba(0,107,60,0.13)"; }}
-            onBlur={(e) => { e.target.style.border = "1.5px solid #e4d4bb"; e.target.style.boxShadow = "none"; }}
+            style={fieldStyle(confirmFocused)}
+            onFocus={() => setConfirmFocused(true)}
+            onBlur={() => setConfirmFocused(false)}
           />
           <button type="button" onClick={() => setShowConfirm((v) => !v)} tabIndex={-1}
             style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex" }}>
