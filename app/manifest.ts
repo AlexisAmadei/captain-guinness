@@ -10,19 +10,26 @@ export default function manifest(): MetadataRoute.Manifest {
     display: "fullscreen",
     display_override: ["fullscreen", "standalone"],
     orientation: "portrait",
-    background_color: "#ffffff",
+    background_color: "#170f07",
     theme_color: "#0f172a",
     icons: [
       {
-        src: "/icon",
+        src: "/favicon/web-app-manifest-192x192.png",
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "any",
+      },
+      {
+        src: "/favicon/web-app-manifest-512x512.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "any",
+      },
+      {
+        src: "/favicon/web-app-manifest-512x512.png",
         sizes: "512x512",
         type: "image/png",
         purpose: "maskable",
-      },
-      {
-        src: "/apple-icon",
-        sizes: "180x180",
-        type: "image/png",
       },
     ],
   };
