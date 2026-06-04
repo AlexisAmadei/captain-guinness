@@ -1,10 +1,10 @@
 "use client";
-import { PhotoCapture } from "@/components/PhotoCapture";
 import { compressImage } from "@/lib/compression";
 import { useRouter } from "next/navigation";
 import { useState, type SyntheticEvent } from "react";
 import { Place, RatingCriteria, isValidOptionalRating, getResponseErrorMessage, SuccessData } from "./page";
 import { T } from "./theme";
+import { Field, Textarea } from "@chakra-ui/react";
 
 // ── Tier helpers ─────────────────────────────────────────────────────────────
 
@@ -137,6 +137,7 @@ export function RatingForm({ place, onSuccess }: { place: Place; onSuccess: (dat
   });
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [pintPrice, setPintPrice] = useState("");
+  const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -158,6 +159,9 @@ export function RatingForm({ place, onSuccess }: { place: Place; onSuccess: (dat
 
     const parsedPrice = pintPrice.trim() === "" ? null : Number(pintPrice);
     if (parsedPrice !== null && (!Number.isFinite(parsedPrice) || parsedPrice < 0)) { setError("Prix invalide"); return; }
+
+    const trimmedNotes = notes.trim();
+    if (trimmedNotes.length > 500) { setError("Les notes ne doivent pas dépasser 500 caractères"); return; }
 
     setLoading(true);
     try {
@@ -187,7 +191,7 @@ export function RatingForm({ place, onSuccess }: { place: Place; onSuccess: (dat
           presentationRating: criteria.presentation || null,
           valueForMoneyRating: criteria.valueForMoney || null,
           barName: place.name,
-          comment: null,
+          comment: trimmedNotes || null,
           pintPrice: parsedPrice,
           ratedAt: new Date().toISOString(),
           photoUrl: imageUrl,
@@ -217,7 +221,14 @@ export function RatingForm({ place, onSuccess }: { place: Place; onSuccess: (dat
   ];
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "calc(100dvh - 64px)", background: T.canvas }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        height: "calc(100dvh - 64px)",
+        background: T.canvas
+      }}
+    >
       {/* Step header */}
       <div style={{
         padding: "14px 16px 10px",
@@ -330,6 +341,46 @@ export function RatingForm({ place, onSuccess }: { place: Place; onSuccess: (dat
           onPhotoCapture={setPhotoFile}
           onPhotoClear={() => setPhotoFile(null)}
         />
+
+        {/* free notes input field */}
+        <div
+          style={{
+            margin: "10px 16px 0",
+            display: "flex",
+            gap: 10,
+            flex: 1,
+            background: T.surfaceSolid,
+            border: `1px solid ${T.border}`,
+            borderRadius: 13,
+            padding: "12px 14px"
+          }}
+        >
+          <Field.Root>
+            <Field.Label
+              style={{
+                fontSize: 10,
+                fontWeight: 600,
+                color: T.muted,
+                letterSpacing: 0.8,
+                fontFamily: '"Geist Mono", ui-monospace, monospace',
+                textTransform: "uppercase",
+                marginBottom: 5
+              }}
+            >
+              Notes libres
+            </Field.Label>
+            <Textarea
+              placeholder="Rencontre avec un agent de convivialité..."
+              variant="outline"
+              autoresize
+              maxLength={500}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+            />
+            <Field.HelperText>{notes.length} / 500 caractères.</Field.HelperText>
+          </Field.Root>
+        </div>
+
         <div
           style={{ margin: "8px 16px 0", display: "flex", justifyContent: "flex-end" }}
         >
@@ -339,7 +390,6 @@ export function RatingForm({ place, onSuccess }: { place: Place; onSuccess: (dat
             Réinitialiser
           </button>
         </div>
-
 
         {error && (
           <div style={{
