@@ -4,7 +4,8 @@ import { useRouter } from "next/navigation";
 import { useState, type SyntheticEvent } from "react";
 import { Place, RatingCriteria, isValidOptionalRating, getResponseErrorMessage, SuccessData } from "./page";
 import { T } from "./theme";
-import { Field, Textarea } from "@chakra-ui/react";
+import { Field, Flex, Textarea } from "@chakra-ui/react";
+import { PhotoCapture } from "@/components/PhotoCapture";
 
 // ── Tier helpers ─────────────────────────────────────────────────────────────
 
@@ -77,19 +78,19 @@ function CriteriaStars({ value, onChange }: { value: number; onChange: (v: numbe
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function PricePhotoRow({ price, onPriceChange, onPhotoCapture, onPhotoClear }: {
+function PriceRow({ price, onPriceChange }: {
   price: string;
   onPriceChange: (v: string) => void;
   onPhotoCapture: (f: File) => void;
   onPhotoClear: () => void;
 }) {
   return (
-    <div style={{ margin: "10px 16px 0", display: "flex", gap: 10 }}>
+    <Flex flexBasis={'2/3'} style={{ display: "flex", gap: 10 }}>
       <div style={{
         flex: 1,
         background: T.surfaceSolid,
         border: `1px solid ${price ? "rgba(35,22,8,0.18)" : T.border}`,
-        borderRadius: 13, padding: "12px 14px",
+        borderRadius: 8, padding: "12px 14px",
       }}>
         <div style={{
           fontSize: 10, fontWeight: 600, color: T.muted, letterSpacing: 0.8,
@@ -114,16 +115,7 @@ function PricePhotoRow({ price, onPriceChange, onPhotoCapture, onPhotoClear }: {
           <span style={{ fontSize: 15, color: T.muted, fontWeight: 500 }}>€</span>
         </div>
       </div>
-
-      {/* <div style={{
-        width: 88, flexShrink: 0,
-        background: T.surfaceSolid,
-        border: `1.5px dashed ${T.border}`,
-        borderRadius: 13, overflow: "hidden",
-      }}>
-        <PhotoCapture onPhotoCapture={onPhotoCapture} onClear={onPhotoClear} />
-      </div> */}
-    </div>
+    </Flex>
   );
 }
 
@@ -309,7 +301,7 @@ export function RatingForm({ place, onSuccess }: { place: Place; onSuccess: (dat
         <div style={{
           margin: "10px 16px 0",
           background: T.surfaceSolid, border: `1px solid ${T.border}`,
-          borderRadius: 16, overflow: "hidden",
+          borderRadius: 8, overflow: "hidden",
           boxShadow: "0 2px 10px rgba(61,36,9,0.05)",
         }}>
           <div style={{
@@ -335,12 +327,24 @@ export function RatingForm({ place, onSuccess }: { place: Place; onSuccess: (dat
           ))}
         </div>
 
-        <PricePhotoRow
-          price={pintPrice}
-          onPriceChange={setPintPrice}
-          onPhotoCapture={setPhotoFile}
-          onPhotoClear={() => setPhotoFile(null)}
-        />
+        <Flex
+          direction={"row"}
+          gap={1}
+          padding={0}
+          margin={0}
+          alignItems={"center"}
+          justifyContent={"center"}
+          mx={'16px'}
+          my={'10px'}
+        >
+          <PriceRow
+            price={pintPrice}
+            onPriceChange={setPintPrice}
+            onPhotoCapture={setPhotoFile}
+            onPhotoClear={() => setPhotoFile(null)}
+          />
+          <PhotoCapture onPhotoCapture={() => setPhotoFile} onClear={() => setPintPrice} />
+        </Flex>
 
         {/* free notes input field */}
         <div
@@ -351,7 +355,7 @@ export function RatingForm({ place, onSuccess }: { place: Place; onSuccess: (dat
             flex: 1,
             background: T.surfaceSolid,
             border: `1px solid ${T.border}`,
-            borderRadius: 13,
+            borderRadius: 8,
             padding: "12px 14px"
           }}
         >

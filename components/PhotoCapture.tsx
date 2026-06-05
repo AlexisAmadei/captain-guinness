@@ -46,13 +46,12 @@ export function PhotoCapture({ onPhotoCapture, onClear }: PhotoCaptureProps) {
 
   return (
     <Box
-      borderWidth="1px"
-      borderStyle="dashed"
-      borderColor="app.border"
-      bg="app.surface"
       borderRadius="lg"
-      p={4}
-      shadow="soft"
+      flexBasis={"1/3"}
+      alignSelf="stretch"
+      w={"100%"}
+      display="flex"
+      flexDirection="column"
     >
       <input
         ref={inputRef}
@@ -64,12 +63,13 @@ export function PhotoCapture({ onPhotoCapture, onClear }: PhotoCaptureProps) {
       />
 
       {preview ? (
-        <Box>
+        <Box h={"100%"}>
           <Image
             src={preview}
             alt="Captured photo"
             w="100%"
-            h={{ base: "220px", md: "280px" }}
+            // h={{ base: "220px", md: "280px" }}
+            h={"100%"}
             objectFit="cover"
             borderRadius="lg"
             mb={3}
@@ -95,6 +95,7 @@ export function PhotoCapture({ onPhotoCapture, onClear }: PhotoCaptureProps) {
       ) : (
         <Button
           w="100%"
+          flex={1}
           variant="outline"
           borderColor="app.border"
           bg="app.surfaceSolid"
@@ -103,14 +104,11 @@ export function PhotoCapture({ onPhotoCapture, onClear }: PhotoCaptureProps) {
           flexDirection="column"
           gap={3}
           borderRadius="lg"
-          shadow="sm"
+          flexDir={"row"}
         >
           <Icon fontSize="3xl" color="app.accent">
             <BiCamera />
           </Icon>
-          <Box as="span" fontSize="md">
-            Take a photo
-          </Box>
         </Button>
       )}
     </Box>
