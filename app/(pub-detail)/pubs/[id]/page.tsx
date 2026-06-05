@@ -450,6 +450,59 @@ function CriteriaCard({
   );
 }
 
+function PhotoLightbox({ url, onClose }: { url: string; onClose: () => void }) {
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 100,
+        background: "rgba(0,0,0,0.88)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 16,
+      }}
+    >
+      <button
+        onClick={onClose}
+        style={{
+          position: "absolute",
+          top: 16,
+          right: 16,
+          width: 36,
+          height: 36,
+          borderRadius: 10,
+          background: "rgba(255,255,255,0.12)",
+          border: "1px solid rgba(255,255,255,0.2)",
+          color: "#fff",
+          fontSize: 18,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+        }}
+      >
+        ✕
+      </button>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={url}
+        alt="Photo de la pinte"
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          maxWidth: "100%",
+          maxHeight: "90dvh",
+          borderRadius: 12,
+          objectFit: "contain",
+          boxShadow: "0 8px 40px rgba(0,0,0,0.5)",
+        }}
+      />
+    </div>
+  );
+}
+
 function ReviewRow({
   review,
   isOwn,
@@ -459,6 +512,7 @@ function ReviewRow({
   isOwn: boolean;
   accent: string;
 }) {
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const ownGreen = "#006b3c";
   const chips: Array<[string, number]> = [
     ["Goût", review.tasteRating ?? 0],
@@ -472,157 +526,187 @@ function ReviewRow({
   const date = formatDate(review.createdAt);
 
   return (
-    <div
-      style={{
-        padding: "12px 0",
-        borderBottom: `1px solid ${T.border}`,
-      }}
-    >
-      <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-        {/* Avatar */}
-        <div
-          style={{
-            width: 34,
-            height: 34,
-            borderRadius: 17,
-            flexShrink: 0,
-            background: isOwn ? `${ownGreen}1e` : T.border,
-            border: isOwn
-              ? `1.5px solid ${ownGreen}55`
-              : `1.5px solid ${T.border}`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontWeight: 700,
-            fontSize: 12,
-            letterSpacing: -0.3,
-            color: isOwn ? ownGreen : T.muted,
-          }}
-        >
-          {initials}
-        </div>
-
-        <div style={{ flex: 1, minWidth: 0 }}>
-          {/* Header row */}
+    <>
+      {lightboxOpen && review.photoUrl && (
+        <PhotoLightbox url={review.photoUrl} onClose={() => setLightboxOpen(false)} />
+      )}
+      <div
+        style={{
+          padding: "12px 0",
+          borderBottom: `1px solid ${T.border}`,
+        }}
+      >
+        <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+          {/* Avatar */}
           <div
             style={{
+              width: 34,
+              height: 34,
+              borderRadius: 17,
+              flexShrink: 0,
+              background: isOwn ? `${ownGreen}1e` : T.border,
+              border: isOwn
+                ? `1.5px solid ${ownGreen}55`
+                : `1.5px solid ${T.border}`,
               display: "flex",
               alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: 5,
+              justifyContent: "center",
+              fontWeight: 700,
+              fontSize: 12,
+              letterSpacing: -0.3,
+              color: isOwn ? ownGreen : T.muted,
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span
-                style={{
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: T.fg,
-                }}
-              >
-                {review.reviewerName ?? "Anonyme"}
-              </span>
-              {isOwn && (
+            {initials}
+          </div>
+
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {/* Header row */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: 5,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <span
                   style={{
-                    fontSize: 9.5,
+                    fontSize: 13,
                     fontWeight: 600,
-                    color: ownGreen,
-                    background: `${ownGreen}18`,
-                    border: `1px solid ${ownGreen}30`,
-                    padding: "1px 6px",
-                    borderRadius: 5,
-                    fontFamily: MONO,
+                    color: T.fg,
                   }}
                 >
-                  moi
+                  {review.reviewerName ?? "Anonyme"}
                 </span>
-              )}
+                {isOwn && (
+                  <span
+                    style={{
+                      fontSize: 9.5,
+                      fontWeight: 600,
+                      color: ownGreen,
+                      background: `${ownGreen}18`,
+                      border: `1px solid ${ownGreen}30`,
+                      padding: "1px 6px",
+                      borderRadius: 5,
+                      fontFamily: MONO,
+                    }}
+                  >
+                    moi
+                  </span>
+                )}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                {review.photoUrl && (
+                  <button
+                    onClick={() => setLightboxOpen(true)}
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: 7,
+                      padding: 0,
+                      border: `1px solid ${T.border}`,
+                      background: "none",
+                      cursor: "pointer",
+                      overflow: "hidden",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={review.photoUrl}
+                      alt="photo"
+                      style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                    />
+                  </button>
+                )}
+                {date && (
+                  <span
+                    style={{
+                      fontSize: 11,
+                      color: T.muted,
+                      fontFamily: MONO,
+                    }}
+                  >
+                    {date}
+                  </span>
+                )}
+              </div>
             </div>
-            {date && (
-              <span
-                style={{
-                  fontSize: 11,
-                  color: T.muted,
-                  fontFamily: MONO,
-                }}
-              >
-                {date}
-              </span>
-            )}
-          </div>
 
-          {/* Score row */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              marginBottom: chips.length > 0 ? 7 : 0,
-            }}
-          >
-            <ScoreBadge avg={review.rating} size={26} />
-            <Stars value={review.rating} size={10} accent={accent} />
-            {review.pintPrice !== null && (
-              <span
-                style={{
-                  marginLeft: "auto",
-                  fontSize: 11,
-                  color: T.muted,
-                  fontFamily: MONO,
-                  background: "#ede0ca",
-                  padding: "2px 7px",
-                  borderRadius: 5,
-                }}
-              >
-                {review.pintPrice.toFixed(2)} €
-              </span>
-            )}
-          </div>
-
-          {/* Criteria chips */}
-          {chips.length > 0 && (
-            <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
-              {chips.map(([label, score]) => (
-                <div
-                  key={label}
+            {/* Score row */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                marginBottom: chips.length > 0 ? 7 : 0,
+              }}
+            >
+              <ScoreBadge avg={review.rating} size={26} />
+              <Stars value={review.rating} size={10} accent={accent} />
+              {review.pintPrice !== null && (
+                <span
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 3,
-                    fontSize: 10.5,
+                    marginLeft: "auto",
+                    fontSize: 11,
+                    color: T.muted,
                     fontFamily: MONO,
-                    color: T.subtle,
-                    background: T.canvas,
-                    border: `1px solid ${T.border}`,
+                    background: "#ede0ca",
                     padding: "2px 7px",
                     borderRadius: 5,
                   }}
                 >
-                  {label}
-                  <span style={{ color: accent, fontWeight: 700 }}>{score}★</span>
-                </div>
-              ))}
+                  {review.pintPrice.toFixed(2)} €
+                </span>
+              )}
             </div>
-          )}
 
-          {/* Notes */}
-          {review.notes && (
-            <p
-              style={{
-                marginTop: 7,
-                fontSize: 13,
-                color: T.fg,
-                fontStyle: "italic",
-                lineHeight: 1.5,
-              }}
-            >
-              &ldquo;{review.notes}&rdquo;
-            </p>
-          )}
+            {/* Criteria chips */}
+            {chips.length > 0 && (
+              <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+                {chips.map(([label, score]) => (
+                  <div
+                    key={label}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 3,
+                      fontSize: 10.5,
+                      fontFamily: MONO,
+                      color: T.subtle,
+                      background: T.canvas,
+                      border: `1px solid ${T.border}`,
+                      padding: "2px 7px",
+                      borderRadius: 5,
+                    }}
+                  >
+                    {label}
+                    <span style={{ color: accent, fontWeight: 700 }}>{score}★</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Notes */}
+            {review.notes && (
+              <p
+                style={{
+                  marginTop: 7,
+                  fontSize: 13,
+                  color: T.fg,
+                  fontStyle: "italic",
+                  lineHeight: 1.5,
+                }}
+              >
+                &ldquo;{review.notes}&rdquo;
+              </p>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 

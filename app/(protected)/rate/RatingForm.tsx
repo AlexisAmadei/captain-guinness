@@ -85,7 +85,7 @@ function PriceRow({ price, onPriceChange }: {
   onPhotoClear: () => void;
 }) {
   return (
-    <Flex flexBasis={'2/3'} style={{ display: "flex", gap: 10 }}>
+    <Flex flexBasis={'3/4'} style={{ display: "flex", gap: 10 }}>
       <div style={{
         flex: 1,
         background: T.surfaceSolid,

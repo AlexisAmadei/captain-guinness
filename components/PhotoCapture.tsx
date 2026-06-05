@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Button, HStack, Icon, Image } from "@chakra-ui/react";
+import { Box, Button, HStack, Icon } from "@chakra-ui/react";
 import { useRef, useState, useCallback } from "react";
 import { BiCamera, BiImage, BiX } from "react-icons/bi";
 
@@ -17,6 +17,7 @@ export function PhotoCapture({ onPhotoCapture, onClear }: PhotoCaptureProps) {
   const streamRef = useRef<MediaStream | null>(null);
   const [mode, setMode] = useState<Mode>("idle");
   const [preview, setPreview] = useState<string | null>(null);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   const stopStream = useCallback(() => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
@@ -103,7 +104,7 @@ export function PhotoCapture({ onPhotoCapture, onClear }: PhotoCaptureProps) {
   return (
     <Box
       borderRadius="lg"
-      flexBasis={"1/3"}
+      flexBasis={"1/4"}
       alignSelf="stretch"
       w={"100%"}
       display="flex"
@@ -134,27 +135,90 @@ export function PhotoCapture({ onPhotoCapture, onClear }: PhotoCaptureProps) {
         </Box>
       )}
 
-      {mode === "preview" && (
-        <Box h="100%">
-          <Image
-            src={preview!}
-            alt="Captured photo"
-            w="100%"
-            h="100%"
-            objectFit="cover"
-            borderRadius="lg"
-            mb={3}
-            shadow="soft"
-          />
-          <HStack>
-            <Button type="button" flex={1} bg="stout.400" onClick={openViewfinder}>
-              Retake
-            </Button>
-            <Button type="button" flex={1} variant="outline" onClick={handleClear}>
-              Clear
-            </Button>
-          </HStack>
-        </Box>
+      {mode === "preview" && preview && (
+        <>
+          {/* Lightbox */}
+          <div
+            onClick={() => setLightboxOpen(false)}
+            style={{
+              display: lightboxOpen ? "flex" : "none",
+              position: "fixed",
+              inset: 0,
+              zIndex: 100,
+              background: "rgba(0,0,0,0.88)",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: 16,
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setLightboxOpen(false)}
+              style={{
+                position: "absolute",
+                top: 16,
+                right: 16,
+                width: 36,
+                height: 36,
+                borderRadius: 10,
+                background: "rgba(255,255,255,0.12)",
+                border: "1px solid rgba(255,255,255,0.2)",
+                color: "#fff",
+                fontSize: 18,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+              }}
+            >
+              ✕
+            </button>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={preview}
+              alt="Captured photo"
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                maxWidth: "100%",
+                maxHeight: "80dvh",
+                borderRadius: 12,
+                objectFit: "contain",
+                boxShadow: "0 8px 40px rgba(0,0,0,0.5)",
+              }}
+            />
+            <HStack position="absolute" bottom={8} gap={3}>
+              <Button type="button" bg="stout.400" onClick={(e) => { setLightboxOpen(false); openViewfinder(e); }}>
+                Retake
+              </Button>
+              <Button type="button" variant="outline" color="white" borderColor="rgba(255,255,255,0.3)" onClick={(e) => { setLightboxOpen(false); handleClear(e); }}>
+                Clear
+              </Button>
+            </HStack>
+          </div>
+
+          {/* Thumbnail button (same size as idle buttons) */}
+          <button
+            type="button"
+            onClick={() => setLightboxOpen(true)}
+            style={{
+              width: "100%",
+              height: "100%",
+              padding: 0,
+              border: "none",
+              borderRadius: 8,
+              overflow: "hidden",
+              cursor: "pointer",
+              display: "block",
+            }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={preview}
+              alt="Captured photo"
+              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+            />
+          </button>
+        </>
       )}
 
       {mode === "idle" && (
