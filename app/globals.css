@@ -29,3 +29,14 @@ body {
   width: 100%;
   background-color: var(--chakra-colors-stout-950);
 }
+
+@keyframes pwaPromptIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}

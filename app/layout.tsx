@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Provider } from "@/components/ui/provider";
-import { PWARegister } from "../components/PWARegister";
+import { PWAManager } from "../components/PWAManager";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,13 +15,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Captain",
-  description: "Rate and discover great bars around you.",
-  applicationName: "Captain",
+  title: "Captain Guinness",
+  description: "Find the best Guinness around you.",
+  applicationName: "Captain Guinness",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    title: "Captain",
+    title: "Captain Guinness",
     statusBarStyle: "black-translucent",
   },
 };
@@ -42,7 +42,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <PWARegister />
+        <PWAManager />
         <Provider>
           {children}
         </Provider>

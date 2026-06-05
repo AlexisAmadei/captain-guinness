@@ -1,10 +1,16 @@
-const CACHE_NAME = "captain-v2";
+const CACHE_NAME = "captain-v3";
 
 // Only cache static assets — never navigation requests (HTML)
 const STATIC_EXTENSIONS = /\.(js|css|woff2?|png|jpg|jpeg|svg|ico|webp)(\?.*)?$/;
 
-self.addEventListener("install", () => {
-  self.skipWaiting();
+// A freshly installed worker stays in the "waiting" state until the page
+// tells it to activate (via the SKIP_WAITING message below). This lets the
+// app show a "new version available" prompt instead of swapping code out
+// from under a running session.
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener("activate", (event) => {
