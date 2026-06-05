@@ -343,7 +343,7 @@ export function RatingForm({ place, onSuccess }: { place: Place; onSuccess: (dat
             onPhotoCapture={setPhotoFile}
             onPhotoClear={() => setPhotoFile(null)}
           />
-          <PhotoCapture onPhotoCapture={() => setPhotoFile} onClear={() => setPintPrice} />
+          <PhotoCapture onPhotoCapture={(f) => setPhotoFile(f)} onClear={() => setPhotoFile(null)} />
         </Flex>
 
         {/* free notes input field */}
